@@ -3,6 +3,11 @@
 BluetoothSerial btSerial;
 SSD1306Wire *display;
 
+#ifdef ENABLE_WIFI
+AsyncWebServer server(80);
+AsyncWebSocket ws("/ws");
+#endif
+
 String bluetoothName = "WIFI_kit_32_dpf";
 String bluetoothPin = "1234";
 String defaultObdIfName = "V-LINK";
@@ -14,10 +19,8 @@ int logLineNumber = 0;
 char rxData[READ_BUFFER_SIZE];
 uint8_t rxIndex = 0;
 
-long smc_value = -1;
-long km_value = -1;
-long inttemp_value = -1;
-float battery_value = -1.0f;
+float smm_value = -100.0f; /*Soot mass measured*/
+float smc_value = -100.0f; /*Soot mass calculated*/
 
 void initDisplay()
 {
@@ -32,12 +35,17 @@ void displayText(int x, int y, String text)
   display->display();
 }
 
+void clearDisplay()
+{
+  display->clear();
+  logLineNumber = 0;
+}
+
 void addToLog(String text)
 {
   if (logLineNumber >= MAX_LOG_LINES)
   {
-    logLineNumber = 0;
-    display->clear();
+    clearDisplay();
   }
 
   displayText(0, logLineNumber, text);
@@ -51,6 +59,18 @@ void addToSerialLog(String text)
   Serial.println(text);
 }
 
+void addBtResponseToSerialLog(String text)
+{
+  Serial.print("< ");
+  Serial.println(text);
+}
+
+void addBtCommandToSerialLog(String text)
+{
+  Serial.print("> ");
+  Serial.println(text);
+}
+
 void addResultToLog(bool result)
 {
   if (result == true)
@@ -59,11 +79,22 @@ void addResultToLog(bool result)
     addToLog(" ERROR!");
 }
 
+bool connectByName = true;
 bool connect()
 {
-  addToLog("Connecting to: " + defaultObdIfName);
-  bool result = btSerial.connect(defaultObdIfName);
-
+  bool result = false;
+  if (connectByName == true)
+  {
+    addToLog("Connecting to: " + defaultObdIfName);
+    result = btSerial.connect(defaultObdIfName);
+    connectByName = false;
+  }
+  else
+  {
+    uint8_t address[6] = {0x86, 0xdc, 0xa6, 0xab, 0xf7, 0xf1};
+    result = btSerial.connect(address);
+    connectByName = true;
+  }
   return result;
 }
 
@@ -71,14 +102,14 @@ void printDeviceStatus()
 {
   String status = "Connected: ";
   status += connected == true ? "Y" : "N";
+  addToSerialLog(status);
 }
 
 void btSerialRead()
 {
-  char c;
+  char c = '\0';
   rxData[0] = '\0';
-  if (btSerial.available() <= 0)
-    return;
+  unsigned long btSerialReadTimeout = millis() + (MAX_BT_RESPONSE_TIME * 1000);
 
   do
   {
@@ -94,24 +125,38 @@ void btSerialRead()
         rxIndex = 0;
       }
     }
-    else
+    if (btSerialReadTimeout < millis())
+    {
+      addToSerialLog("BtSerial read timeout error");
       break;
+    }
   } while (c != '>');
   rxData[rxIndex++] = '\0';
   rxIndex = 0;
+
+#ifdef ENABLE_WIFI
+  ws.textAll("R:");
+  ws.textAll(rxData);
+  ws.textAll("\n");
+#endif
 }
 
 void btSerialReadAndAddToLog()
 {
   btSerialRead();
-  addToLog(String(rxData));
+  addBtResponseToSerialLog(String(rxData));
 }
 
 void btSerialSendCommand(String command, int delayTime)
 {
   btSerial.flush();
-  addToSerialLog(command);
+  addBtCommandToSerialLog(command);
   btSerial.print(command);
+#ifdef ENABLE_WIFI
+  ws.textAll("W:");
+  ws.textAll(command.c_str(), command.length());
+  ws.textAll("\n");
+#endif
   delay(delayTime);
 }
 
@@ -128,6 +173,8 @@ void btSerialInit()
   btSerialSendCommand("VTI\r", 500);
   btSerialReadAndAddToLog();
   btSerialSendCommand("ATD\r", 500);
+  btSerialReadAndAddToLog();
+  btSerialSendCommand("ATE0\r", 500);
   btSerialReadAndAddToLog();
 
   btSerialSendCommand("ATSP0\r", 500);
@@ -148,7 +195,15 @@ void btSerialInit()
   btSerialSendCommand("ATST64\r", 500);
   btSerialReadAndAddToLog();
 
-  btSerialSendCommand("0100\r", 500);
+  btSerialSendCommand("0100\r", 5000); // SEARCHING...
+  btSerialReadAndAddToLog();
+
+  btSerialSendCommand("ATDPN\r", 500);
+  btSerialReadAndAddToLog();
+
+  btSerialSendCommand("ATSH7E0\r", 500);
+  btSerialReadAndAddToLog();
+  btSerialSendCommand("10031\r", 500);
   btSerialReadAndAddToLog();
 }
 
@@ -156,62 +211,6 @@ void btSerialCallback(esp_spp_cb_event_t event, esp_spp_cb_param_t *param)
 {
   switch (event)
   {
-  case ESP_SPP_INIT_EVT:
-  {
-    addToLog("ESP_SPP_INIT_EVT!");
-  }
-  break;
-  case ESP_SPP_UNINIT_EVT:
-  {
-    addToLog("ESP_SPP_UNINIT_EVT!");
-  }
-  break;
-  case ESP_SPP_DISCOVERY_COMP_EVT:
-  {
-    addToLog("ESP_SPP_DISCOVERY_COMP_EVT!");
-  }
-  break;
-  case ESP_SPP_OPEN_EVT:
-  {
-    addToLog("ESP_SPP_OPEN_EVT!");
-  }
-  break;
-  case ESP_SPP_START_EVT:
-  {
-    addToLog("ESP_SPP_START_EVT!");
-  }
-  break;
-  case ESP_SPP_CL_INIT_EVT:
-  {
-    addToLog("ESP_SPP_CL_INIT_EVT!");
-  }
-  break;
-  case ESP_SPP_DATA_IND_EVT:
-  {
-    addToLog("ESP_SPP_DATA_IND_EVT!");
-  }
-  break;
-  case ESP_SPP_CONG_EVT:
-  {
-    addToLog("ESP_SPP_CONG_EVT!");
-  }
-  break;
-  case ESP_SPP_WRITE_EVT:
-  {
-    addToLog("ESP_SPP_WRITE_EVT!");
-  }
-  break;
-  case ESP_SPP_SRV_STOP_EVT:
-  {
-    addToLog("ESP_SPP_SRV_STOP_EVT!");
-  }
-  break;
-
-  case ESP_SPP_SRV_OPEN_EVT:
-  {
-    addToLog("Connected!");
-  }
-  break;
   case ESP_SPP_CLOSE_EVT:
   {
     addToLog("Disconnected!");
@@ -229,63 +228,58 @@ bool isReadCanError()
   char *ptr = strstr(rxData, canErrorMessage);
   if (ptr == NULL)
     return false;
+  if (rxData[0] == '\0')
+    return false;
   return true;
 }
 
-void btSerialGetIntTemp()
+int getByteFromData(int index)
 {
-  btSerialSendCommand("010F\r", 5);
-  btSerialRead();
-  if (isReadCanError())
-  {
-    inttemp_value = -1;
-    return;
-  }
-  inttemp_value = strtol(&rxData[6], 0, 16) - 40;
+  char buffer[3] = {0, 0, 0};
+  buffer[0] = rxData[index];
+  buffer[0 + 1] = rxData[index + 1];
+  return (strtol(&buffer[0], NULL, 16));
 }
 
-void btSerialGetBattery()
+void btSerialGetSMCData()
 {
-  btSerialSendCommand("0142\r", 5);
-  btSerialRead();
-  if (isReadCanError())
-  {
-    battery_value = -1;
-    return;
-  }
-  battery_value = ((strtol(&rxData[6], 0, 16) * 256) + strtol(&rxData[9], 0, 16));
-  battery_value = battery_value / 1000.0f;
+  btSerialSendCommand("22114E1\r", 200);
+  btSerialReadAndAddToLog();
+  smm_value = (((getByteFromData(11) * 256) + (getByteFromData(13))) / 100.0f);
+
+  btSerialSendCommand("22114F1\r", 200);
+  btSerialReadAndAddToLog();
+  smc_value = (((getByteFromData(11) * 256) + (getByteFromData(13))) / 100.0f);
 }
 
 void btSerialGetData()
 {
-  btSerialGetBattery();
-  btSerialGetIntTemp();
+  btSerialGetSMCData();
 }
 
 void displayData()
 {
   int xpos = 0, ypos = 0;
 
-  display->clear();
+  clearDisplay();
 
+  displayText(xpos, ypos, "smm:");
+  ypos += 10;
   displayText(xpos, ypos, "smc:");
-  ypos += 10;
-  displayText(xpos, ypos, "km:");
-  ypos += 10;
-  displayText(xpos, ypos, "inttemp:");
-  ypos += 10;
-  displayText(xpos, ypos, "battery:");
 
   xpos = 40;
   ypos = 0;
-  displayText(xpos, ypos, (smc_value == -1 ? "?" : String(smc_value)));
+  displayText(xpos, ypos, (smm_value <= -100.0f ? "?" : String(smm_value, 2)));
   ypos += 10;
-  displayText(xpos, ypos, (km_value == -1 ? "?" : String(km_value)));
-  ypos += 10;
-  displayText(xpos, ypos, (inttemp_value == -1 ? "?" : String(inttemp_value)));
-  ypos += 10;
-  displayText(xpos, ypos, (battery_value <= -1.0f ? "?" : String(battery_value)));
+  displayText(xpos, ypos, (smc_value <= -100.0f ? "?" : String(smc_value, 2)));
+
+  Serial.println("========================");
+  Serial.print("smm_value: ");
+  Serial.print(String(smm_value, 2));
+  Serial.print(" g, smc_value: ");
+  Serial.print(String(smm_value, 2));
+  Serial.println(" g");
+  addToSerialLog("========================");
 }
 
 void drawProgressBar()
@@ -296,9 +290,45 @@ void drawProgressBar()
   for (int i = 1; i < 100; i++)
   {
     displayText(i, LAST_LINE - 3, ".");
-    delay(100);
+    delay(50);
   }
 }
+
+#ifdef ENABLE_WIFI
+void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len)
+{
+  switch (type)
+  {
+  case WS_EVT_CONNECT:
+    Serial.printf("WebSocket client #%u connected from %s\n", client->id(), client->remoteIP().toString().c_str());
+    break;
+  case WS_EVT_DISCONNECT:
+    Serial.printf("WebSocket client #%u disconnected\n", client->id());
+    break;
+  case WS_EVT_DATA:
+  case WS_EVT_PONG:
+  case WS_EVT_ERROR:
+    break;
+  }
+}
+
+void handleRoot(AsyncWebServerRequest *request)
+{
+  request->send_P(200, "text/html", FRM_PASS);
+}
+
+void initWebserver()
+{
+  WiFi.softAP(ssid, password);
+  IPAddress myIP = WiFi.softAPIP();
+  addToLog("AP IP address: ");
+  addToLog(myIP.toString());
+  server.on("/", HTTP_GET, handleRoot);
+  ws.onEvent(onEvent);
+  server.addHandler(&ws);
+  server.begin();
+}
+#endif
 
 void setup()
 {
@@ -312,6 +342,12 @@ void setup()
   result = btSerial.begin(bluetoothName, true);
   addResultToLog(result);
 
+  addToLog("Set bluetooth PIN...");
+  result = btSerial.setPin(bluetoothPin.c_str());
+  addResultToLog(result);
+
+  btSerial.enableSSP();
+
   addToLog("Set btSerial callback...");
   result = btSerial.register_callback(btSerialCallback);
   addResultToLog(result == ESP_OK ? true : false);
@@ -320,17 +356,23 @@ void setup()
   result = btSerial.isReady(true, 0);
   addResultToLog(result);
 
-  addToLog("Set bluetooth PIN...");
-  result = btSerial.setPin(bluetoothPin.c_str());
-  addResultToLog(result);
+#ifdef ENABLE_WIFI
+  initWebserver();
+#endif
 }
 
 void loop()
 {
+#ifdef ENABLE_WIFI
+  ws.cleanupClients();
+#endif
+
   printDeviceStatus();
 
   if (!connected)
   {
+    clearDisplay();
+
     connected = connect();
     addResultToLog(connected);
 
