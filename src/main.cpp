@@ -18,6 +18,7 @@ bool connected = false;
 int logLineNumber = 0;
 char rxData[READ_BUFFER_SIZE];
 uint8_t rxIndex = 0;
+bool connectByName = true;
 
 float smm_value = -100.0f; /*Soot mass measured*/
 float smc_value = -100.0f; /*Soot mass calculated*/
@@ -79,7 +80,6 @@ void addResultToLog(bool result)
     addToLog(" ERROR!");
 }
 
-bool connectByName = true;
 bool connect()
 {
   bool result = false;
@@ -95,6 +95,7 @@ bool connect()
     result = btSerial.connect(address);
     connectByName = true;
   }
+
   return result;
 }
 
