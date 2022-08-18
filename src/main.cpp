@@ -22,12 +22,16 @@ bool connectByName = true;
 uint8_t pairedDeviceBtAddr[PAIR_MAX_DEVICES][6];
 char bda_str[18];
 
-float smm_value = -100.0f;   /*Soot mass measured*/
-float smc_value = -100.0f;   /*Soot mass calculated*/
-float dslr_value = -100.0f;  /*Distance since last regeneration*/
-float tslr_value = -100.0f;  /*Time since last regen*/
+float smm_value = -100.0f;  /*Soot mass measured*/
+float smc_value = -100.0f;  /*Soot mass calculated*/
+float dslr_value = -100.0f; /*Distance since last regeneration*/
+float tslr_value = -100.0f; /*Time since last regen*/
+#ifdef READ_OAR_INSTEAD_TEMPERATURE
+float oar_value = -100.0f; /*Oil Ash Residue*/
+#else
 float itemp_value = -100.0f; /*Input Temp*/
 float otemp_value = -100.0f; /*Output Temp*/
+#endif
 
 void initDisplay()
 {
@@ -300,7 +304,7 @@ bool btSerialGetSdlrData()
     dslr_value = -100.0f;
     return false;
   }
-  dslr_value = (((getByteFromData(15) * 256) + (getByteFromData(17))) / 1000.0f);
+  dslr_value = (((getByteFromData(11) * 16777216) + (getByteFromData(13) * 65536) + (getByteFromData(15) * 256) + (getByteFromData(17))) / 1000.0f);
   return true;
 }
 
@@ -313,10 +317,11 @@ bool btSerialGetTslrData()
     tslr_value = -100.0f;
     return false;
   }
-  tslr_value = (((getByteFromData(15) * 256) + (getByteFromData(17))) / 60.0f);
+  tslr_value = (((getByteFromData(11) * 16777216) + (getByteFromData(13) * 65536) + (getByteFromData(15) * 256) + (getByteFromData(17))) / 60.0f);
   return true;
 }
 
+#ifndef READ_OAR_INSTEAD_TEMPERATURE
 bool btSerialGetItempData()
 {
   btSerialSendCommand("2211B2\r", 200);
@@ -326,7 +331,7 @@ bool btSerialGetItempData()
     itemp_value = -100.0f;
     return false;
   }
-  itemp_value = ((((getByteFromData(11) * 256) + (getByteFromData(13)))-2731) / 10.0f);
+  itemp_value = ((((getByteFromData(11) * 256) + (getByteFromData(13))) - 2731) / 10.0f);
   return true;
 }
 
@@ -339,13 +344,27 @@ bool btSerialGetOtempData()
     otemp_value = -100.0f;
     return false;
   }
-  otemp_value = ((((getByteFromData(11) * 256) + (getByteFromData(13)))-2731) / 10.0f);
+  otemp_value = ((((getByteFromData(11) * 256) + (getByteFromData(13))) - 2731) / 10.0f);
   return true;
 }
+#else
+bool btSerialGetOarData()
+{
+  btSerialSendCommand("22178C\r", 200);
+  btSerialReadAndAddToLog();
+  if (isReadCanError())
+  {
+    oar_value = -100.0f;
+    return false;
+  }
+  oar_value = (((getByteFromData(11) * 256) + (getByteFromData(13))) / 10.0f);
+  return true;
+}
+#endif
 
 void markReadingValue(int row, bool readResult)
 {
-  int xpos = 100, ypos = 10 * (row - 1);
+  int xpos = 110, ypos = 10 * (row - 1);
   displayText(xpos, ypos, (readResult == true ? "V" : "X"));
 }
 
@@ -363,11 +382,16 @@ void btSerialGetData()
   readResult = btSerialGetTslrData();
   markReadingValue(4, readResult);
 
+#ifdef READ_OAR_INSTEAD_TEMPERATURE
+  readResult = btSerialGetOarData();
+  markReadingValue(5, readResult);
+#else
   readResult = btSerialGetItempData();
   markReadingValue(5, readResult);
 
   readResult = btSerialGetOtempData();
   markReadingValue(6, readResult);
+#endif
 }
 
 void displayData()
@@ -376,19 +400,23 @@ void displayData()
 
   clearDisplay();
 
-  displayText(xpos, ypos, "smm:");
+  displayText(xpos, ypos, "smm [g]:");
   ypos += 10;
-  displayText(xpos, ypos, "smc:");
+  displayText(xpos, ypos, "smc [g]:");
   ypos += 10;
-  displayText(xpos, ypos, "dslr:");
+  displayText(xpos, ypos, "dslr [km]:");
   ypos += 10;
-  displayText(xpos, ypos, "tslr:");
+  displayText(xpos, ypos, "tslr [min]:");
   ypos += 10;
-  displayText(xpos, ypos, "itemp:");
+#ifdef READ_OAR_INSTEAD_TEMPERATURE
+  displayText(xpos, ypos, "oar [g]:");
+#else
+  displayText(xpos, ypos, "itemp [C]:");
   ypos += 10;
-  displayText(xpos, ypos, "otemp:");
+  displayText(xpos, ypos, "otemp [C]:");
+#endif
 
-  xpos = 40;
+  xpos = 60;
   ypos = 0;
   displayText(xpos, ypos, (smm_value <= -100.0f ? "?" : String(smm_value, 2)));
   ypos += 10;
@@ -398,14 +426,21 @@ void displayData()
   ypos += 10;
   displayText(xpos, ypos, (tslr_value <= -100.0f ? "?" : String(tslr_value, 2)));
   ypos += 10;
+#ifdef READ_OAR_INSTEAD_TEMPERATURE
+  displayText(xpos, ypos, (oar_value <= -100.0f ? "?" : String(oar_value, 2)));
+#else
   displayText(xpos, ypos, (itemp_value <= -100.0f ? "?" : String(itemp_value, 2)));
   ypos += 10;
   displayText(xpos, ypos, (otemp_value <= -100.0f ? "?" : String(otemp_value, 2)));
-
+#endif
   Serial.println("========================");
   Serial.println("smm_value: " + String(smm_value, 2) + "g, smc_value: " + String(smc_value, 2) + "g");
   Serial.println("dslr_value (distance): " + String(dslr_value, 2) + "km, tslr_value (time): " + String(tslr_value, 2) + "min");
+#ifdef READ_OAR_INSTEAD_TEMPERATURE
+  Serial.println("oar_value (oil ash residue): " + String(oar_value, 2) + "g");
+#else
   Serial.println("itemp_value (input t): " + String(itemp_value, 2) + "C, otemp_value (output t): " + String(otemp_value, 2) + "C");
+#endif
   addToSerialLog("========================");
 }
 
