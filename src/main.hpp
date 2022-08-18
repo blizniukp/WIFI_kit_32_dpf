@@ -7,6 +7,10 @@
 #include <WiFiAP.h>
 #include <WiFiServer.h>
 #include <ESPAsyncWebServer.h>
+#include "esp_bt_main.h"
+#include "esp_bt_device.h"
+#include "esp_gap_bt_api.h"
+#include "esp_err.h"
 #endif
 
 #define SDA_OLED 5
@@ -16,6 +20,8 @@
 #define MAX_LOG_LINES (60)
 #define LAST_LINE (55)
 #define MAX_BT_RESPONSE_TIME (10) /*10 seconds*/
+#define PAIR_MAX_DEVICES 20
+#define REMOVE_BONDED_DEVICES 1
 
 #ifdef ENABLE_WIFI
 const char *ssid = "WIFI_kit_32_dpf";
@@ -23,12 +29,14 @@ const char *password = "wifikit32";
 
 static const char FRM_PASS[] PROGMEM = R"rawliteral(<html>
 <meta name='viewport' content='width=device-width, initial-scale=1'>
-<body style='background-color:#161317; color: white'>            
-    <p>Bluetooth serial dump:</p>
-    <p>
-        <textarea name="serial" id="serial" rows="10" cols="40"></textarea>
-    </p>
-    
+<body style='background-color:#161317; color: white'>
+  <form action='/remove'>
+    <input type='submit' value='Remove bonded devices'>
+  </form>
+  <p>Bluetooth serial dump:</p>
+  <p>
+    <textarea name="serial" id="serial" rows="10" cols="40"></textarea>
+  </p>
 </body>
 <script>
   var gateway = `ws://${window.location.hostname}/ws`;
