@@ -11,7 +11,6 @@ AsyncWebSocket ws("/ws");
 String bluetoothName = "WIFI_kit_32_dpf";
 String bluetoothPin = "1234";
 String defaultObdIfName = "V-LINK";
-char canErrorMessage[] = "CAN ERROR";
 const int READ_BUFFER_SIZE = 128;
 
 bool connected = false;
@@ -23,8 +22,12 @@ bool connectByName = true;
 uint8_t pairedDeviceBtAddr[PAIR_MAX_DEVICES][6];
 char bda_str[18];
 
-float smm_value = -100.0f; /*Soot mass measured*/
-float smc_value = -100.0f; /*Soot mass calculated*/
+float smm_value = -100.0f;   /*Soot mass measured*/
+float smc_value = -100.0f;   /*Soot mass calculated*/
+float dslr_value = -100.0f;  /*Distance since last regeneration*/
+float tslr_value = -100.0f;  /*Time since last regen*/
+float itemp_value = -100.0f; /*Input Temp*/
+float otemp_value = -100.0f; /*Output Temp*/
 
 void initDisplay()
 {
@@ -229,12 +232,29 @@ void btSerialCallback(esp_spp_cb_event_t event, esp_spp_cb_param_t *param)
 
 bool isReadCanError()
 {
-  char *ptr = strstr(rxData, canErrorMessage);
-  if (ptr == NULL)
-    return false;
+  printf("#isReadCanError: %s\n", rxData);
+
+  char *ret = NULL;
+  ret = strstr(rxData, "SEARCHING");
+  if (ret)
+    return true;
+
+  ret = strstr(rxData, "CAN ERROR");
+  if (ret)
+    return true;
+
+  ret = strstr(rxData, "STOPPED");
+  if (ret)
+    return true;
+
+  ret = strstr(rxData, "UNABLE");
+  if (ret)
+    return true;
+
   if (rxData[0] == '\0')
-    return false;
-  return true;
+    return true;
+
+  return false;
 }
 
 int getByteFromData(int index)
@@ -245,20 +265,109 @@ int getByteFromData(int index)
   return (strtol(&buffer[0], NULL, 16));
 }
 
-void btSerialGetSMCData()
+bool btSerialGetSMMData()
 {
   btSerialSendCommand("22114E1\r", 200);
   btSerialReadAndAddToLog();
+  if (isReadCanError())
+  {
+    smm_value = -100.0f;
+    return false;
+  }
   smm_value = (((getByteFromData(11) * 256) + (getByteFromData(13))) / 100.0f);
+  return true;
+}
 
+bool btSerialGetSMCData()
+{
   btSerialSendCommand("22114F1\r", 200);
   btSerialReadAndAddToLog();
+  if (isReadCanError())
+  {
+    smc_value = -100.0f;
+    return false;
+  }
   smc_value = (((getByteFromData(11) * 256) + (getByteFromData(13))) / 100.0f);
+  return true;
+}
+
+bool btSerialGetSdlrData()
+{
+  btSerialSendCommand("221156\r", 200);
+  btSerialReadAndAddToLog();
+  if (isReadCanError())
+  {
+    dslr_value = -100.0f;
+    return false;
+  }
+  dslr_value = (((getByteFromData(15) * 256) + (getByteFromData(17))) / 1000.0f);
+  return true;
+}
+
+bool btSerialGetTslrData()
+{
+  btSerialSendCommand("22115E\r", 200);
+  btSerialReadAndAddToLog();
+  if (isReadCanError())
+  {
+    tslr_value = -100.0f;
+    return false;
+  }
+  tslr_value = (((getByteFromData(15) * 256) + (getByteFromData(17))) / 60.0f);
+  return true;
+}
+
+bool btSerialGetItempData()
+{
+  btSerialSendCommand("2211B2\r", 200);
+  btSerialReadAndAddToLog();
+  if (isReadCanError())
+  {
+    itemp_value = -100.0f;
+    return false;
+  }
+  itemp_value = ((((getByteFromData(11) * 256) + (getByteFromData(13)))-2731) / 10.0f);
+  return true;
+}
+
+bool btSerialGetOtempData()
+{
+  btSerialSendCommand("2210F9\r", 200);
+  btSerialReadAndAddToLog();
+  if (isReadCanError())
+  {
+    otemp_value = -100.0f;
+    return false;
+  }
+  otemp_value = ((((getByteFromData(11) * 256) + (getByteFromData(13)))-2731) / 10.0f);
+  return true;
+}
+
+void markReadingValue(int row, bool readResult)
+{
+  int xpos = 100, ypos = 10 * (row - 1);
+  displayText(xpos, ypos, (readResult == true ? "V" : "X"));
 }
 
 void btSerialGetData()
 {
-  btSerialGetSMCData();
+  bool readResult = btSerialGetSMMData();
+  markReadingValue(1, readResult);
+
+  readResult = btSerialGetSMCData();
+  markReadingValue(2, readResult);
+
+  readResult = btSerialGetSdlrData();
+  markReadingValue(3, readResult);
+
+  readResult = btSerialGetTslrData();
+  markReadingValue(4, readResult);
+
+  readResult = btSerialGetItempData();
+  markReadingValue(5, readResult);
+
+  readResult = btSerialGetOtempData();
+  markReadingValue(6, readResult);
 }
 
 void displayData()
@@ -270,19 +379,33 @@ void displayData()
   displayText(xpos, ypos, "smm:");
   ypos += 10;
   displayText(xpos, ypos, "smc:");
+  ypos += 10;
+  displayText(xpos, ypos, "dslr:");
+  ypos += 10;
+  displayText(xpos, ypos, "tslr:");
+  ypos += 10;
+  displayText(xpos, ypos, "itemp:");
+  ypos += 10;
+  displayText(xpos, ypos, "otemp:");
 
   xpos = 40;
   ypos = 0;
   displayText(xpos, ypos, (smm_value <= -100.0f ? "?" : String(smm_value, 2)));
   ypos += 10;
   displayText(xpos, ypos, (smc_value <= -100.0f ? "?" : String(smc_value, 2)));
+  ypos += 10;
+  displayText(xpos, ypos, (dslr_value <= -100.0f ? "?" : String(dslr_value, 2)));
+  ypos += 10;
+  displayText(xpos, ypos, (tslr_value <= -100.0f ? "?" : String(tslr_value, 2)));
+  ypos += 10;
+  displayText(xpos, ypos, (itemp_value <= -100.0f ? "?" : String(itemp_value, 2)));
+  ypos += 10;
+  displayText(xpos, ypos, (otemp_value <= -100.0f ? "?" : String(otemp_value, 2)));
 
   Serial.println("========================");
-  Serial.print("smm_value: ");
-  Serial.print(String(smm_value, 2));
-  Serial.print(" g, smc_value: ");
-  Serial.print(String(smm_value, 2));
-  Serial.println(" g");
+  Serial.println("smm_value: " + String(smm_value, 2) + "g, smc_value: " + String(smc_value, 2) + "g");
+  Serial.println("dslr_value (distance): " + String(dslr_value, 2) + "km, tslr_value (time): " + String(tslr_value, 2) + "min");
+  Serial.println("itemp_value (input t): " + String(itemp_value, 2) + "C, otemp_value (output t): " + String(otemp_value, 2) + "C");
   addToSerialLog("========================");
 }
 
@@ -472,7 +595,9 @@ void loop()
       return;
     }
 
+    addToLog("Connected");
     btSerialInit();
+    displayData();
   }
 
   if (!connected)
