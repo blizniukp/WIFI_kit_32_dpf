@@ -42,7 +42,7 @@ static const char FRM_PASS[] PROGMEM = R"rawliteral(<html>
   </form>
   <p>Bluetooth serial dump:</p>
   <p>
-    <textarea name="serial" id="serial" rows="10" cols="40"></textarea>
+    <textarea name="serial" id="serial" rows="30" cols="40"></textarea>
   </p>
 </body>
 <script>
