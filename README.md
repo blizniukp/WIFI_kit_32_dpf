@@ -1,7 +1,10 @@
 # WIFI_kit_32_dpf
+
+*Read this in other language: [English](README.md), [Polski](README.pl.md).*
+
 Displays DPF status information on the WIFI_kit_32 or Wemos Lolin32 OLED device.
 
-The device has only been tested with the Audi A4 B8 2.0 with CAGA engine and the iCar2 Vgate interface.
+The devices has only been tested with the Audi A4 B8 2.0 with CAGA engine and the iCar2 Vgate interface.
 
 The premise of the project was to use an ESP32 module with an attached OLED display.
 
