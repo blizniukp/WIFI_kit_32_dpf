@@ -100,7 +100,7 @@ The latest firmware version is available in [Releases](https://github.com/blizni
 We should have four files in the firmware package:
 - bootloader_dio_40m.bin
 - partitions.bin
-- boot_app0
+- boot_app0.bin
 - firmware.bin
 
 You should extract them to some directory on your disk.

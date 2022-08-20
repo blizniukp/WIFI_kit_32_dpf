@@ -100,7 +100,7 @@ Najnowsza wersja firmware jest dostępna w [Releases](https://github.com/blizniu
 W paczce z firmware powinniśmy mieć cztery pliki:
 - bootloader_dio_40m.bin
 - partitions.bin
-- boot_app0
+- boot_app0.bin
 - firmware.bin
 
 Należy je wypakować do jakiegoś katalogu na dysku.
