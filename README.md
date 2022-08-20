@@ -97,14 +97,22 @@ The firmware can be uploaded using the application [Esp Download Tool](https://w
 The latest firmware version is available in [Releases](https://github.com/blizniukp/WIFI_kit_32_dpf/releases)
 
 
-We should have three files in the firmware package:
-- bootloader.bin
+We should have four files in the firmware package:
+- bootloader_dio_40m.bin
 - partitions.bin
+- boot_app0
 - firmware.bin
 
 You should extract them to some directory on your disk.
 
-After running the `ESP32 DOWNLOAD TOOL` application, indicate these files and complete the fields as in the screenshot below.
+After launching the `ESP32 DOWNLOAD TOOL` application, you need to point to these files and complete the fields analogously to the screenshot below, except that you need to enter the following addresses:
+
+```
+bootloader_dio_40m.bin - 0x1000
+partitions.bin - 0x8000
+boot_app0.bin - 0xe000
+firmware.bin - 0x10000
+```
 
 ![esp32_download_tool](/docs/esp32_download_tool.png)
 
@@ -137,6 +145,7 @@ This is useful when a connection error occurs. And the problem occurs when you c
 
 - [ ] Increase the font and display only one parameter at a time
 - [ ] Ability to configure the device (specifying the name of the OBD interface and PIN code)
+- [ ] Update the screenshot from ESP32 DOWNLOAD TOOL (I'm using Linux, and this app is for Windows)
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 

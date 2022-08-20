@@ -97,14 +97,22 @@ Firmware do urządzenia można wgrać za pomocą aplikacji [Esp Download Tool](h
 Najnowsza wersja firmware jest dostępna w [Releases](https://github.com/blizniukp/WIFI_kit_32_dpf/releases)
 
 
-W paczce z firmware powinniśmy mieć trzy pliki:
-- bootloader.bin
+W paczce z firmware powinniśmy mieć cztery pliki:
+- bootloader_dio_40m.bin
 - partitions.bin
+- boot_app0
 - firmware.bin
 
 Należy je wypakować do jakiegoś katalogu na dysku.
 
-Po uruchomieniu aplikacji `ESP32 DOWNLOAD TOOL` należy wskazać te pliki oraz uzupełnić pola tak jak na zrzucie ekranu ekranu poniżej.
+Po uruchomieniu aplikacji `ESP32 DOWNLOAD TOOL` należy wskazać te pliki oraz uzupełnić pola analogicznie jak na zrzucie ekranu ekranu poniżej, z tą różnicą, że trzeba podać następujące adresy:
+
+```
+bootloader_dio_40m.bin - 0x1000
+partitions.bin - 0x8000
+boot_app0.bin - 0xe000
+firmware.bin - 0x10000
+```
 
 ![esp32_download_tool](/docs/esp32_download_tool.png)
 
@@ -137,6 +145,7 @@ Jest to przydatne w momencie występienia błędu podczas łączenia. A problem 
 
 - [ ] Zwiększenie czcionki i wyświetlanie tylko jednego parametru na raz
 - [ ] Możliwość konfiguracji urządzenia (podanie nazwy interfejsu OBD oraz kodu PIN)
+- [ ] Zaktualizować zrzut ekranu z ESP32 DOWNLOAD TOOL (używam Linuxa, a ta aplikacja jest pod Windowsa)
 
 <p align="right">(<a href="#top">powrót do góry</a>)</p>
 
