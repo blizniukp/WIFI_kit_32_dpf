@@ -25,7 +25,7 @@ char bda_str[18];
 float smm_value = -100.0f;  /*Soot mass measured*/
 float smc_value = -100.0f;  /*Soot mass calculated*/
 float dslr_value = -100.0f; /*Distance since last regeneration*/
-float tslr_value = -100.0f; /*Time since last regen*/
+float tslr_value = -100.0f; /*Time since last regeneration*/
 #ifdef READ_OAR_INSTEAD_TEMPERATURE
 float oar_value = -100.0f; /*Oil Ash Residue*/
 #else
