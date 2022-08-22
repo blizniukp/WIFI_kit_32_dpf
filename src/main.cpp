@@ -22,16 +22,22 @@ bool connectByName = true;
 uint8_t pairedDeviceBtAddr[PAIR_MAX_DEVICES][6];
 char bda_str[18];
 
-float smm_value = -100.0f;  /*Soot mass measured*/
-float smc_value = -100.0f;  /*Soot mass calculated*/
-float dslr_value = -100.0f; /*Distance since last regeneration*/
-float tslr_value = -100.0f; /*Time since last regeneration*/
-#ifdef READ_OAR_INSTEAD_TEMPERATURE
-float oar_value = -100.0f; /*Oil Ash Residue*/
-#else
-float itemp_value = -100.0f; /*Input Temp*/
-float otemp_value = -100.0f; /*Output Temp*/
-#endif
+bool calcFun_AB(char *command, float *val, float divider);
+bool calcFun_ABCD(char *command, float *val, float divider);
+bool calcFun_Temperature(char *command, float *val, float divider);
+
+measurement_t measurements[] = {
+    {1, "Soot mass measured", "22114E1\r", "g", -100.0f, &calcFun_AB, 100.0f},
+    {2, "Soot mass calculated", "22114F1\r", "g", -100.0f, &calcFun_AB, 100.0f},
+    {3, "Distance since last regen.", "221156\r", "km", -100.0f, &calcFun_ABCD, 1000.0f},
+    {4, "Time since last regen", "22115E\r", "min", -100.0f, &calcFun_ABCD, 60.0f},
+    {5, "Input temperature", "2211B2\r", "*C", -100.0f, &calcFun_Temperature, 10.0f},
+    {6, "Outptu temperature", "2210F9\r", "*C", -100.0f, &calcFun_Temperature, 10.0f},
+    {7, "Oil Ash Residue", "22178C\r", "g", -100.0f, &calcFun_AB, 10.0f},
+    {0, "", "", "", 0.0f, NULL, 0.0f},
+};
+
+int measurement_idx = 0;
 
 void initDisplay()
 {
@@ -269,178 +275,75 @@ int getByteFromData(int index)
   return (strtol(&buffer[0], NULL, 16));
 }
 
-bool btSerialGetSMMData()
+bool calcFun_AB(char *command, float *val, float divider)
 {
-  btSerialSendCommand("22114E1\r", 200);
-  btSerialReadAndAddToLog();
-  if (isReadCanError())
-  {
-    smm_value = -100.0f;
-    return false;
-  }
-  smm_value = (((getByteFromData(11) * 256) + (getByteFromData(13))) / 100.0f);
-  return true;
-}
-
-bool btSerialGetSMCData()
-{
-  btSerialSendCommand("22114F1\r", 200);
-  btSerialReadAndAddToLog();
-  if (isReadCanError())
-  {
-    smc_value = -100.0f;
-    return false;
-  }
-  smc_value = (((getByteFromData(11) * 256) + (getByteFromData(13))) / 100.0f);
-  return true;
-}
-
-bool btSerialGetSdlrData()
-{
-  btSerialSendCommand("221156\r", 200);
-  btSerialReadAndAddToLog();
-  if (isReadCanError())
-  {
-    dslr_value = -100.0f;
-    return false;
-  }
-  dslr_value = (((getByteFromData(11) * 16777216) + (getByteFromData(13) * 65536) + (getByteFromData(15) * 256) + (getByteFromData(17))) / 1000.0f);
-  return true;
-}
-
-bool btSerialGetTslrData()
-{
-  btSerialSendCommand("22115E\r", 200);
-  btSerialReadAndAddToLog();
-  if (isReadCanError())
-  {
-    tslr_value = -100.0f;
-    return false;
-  }
-  tslr_value = (((getByteFromData(11) * 16777216) + (getByteFromData(13) * 65536) + (getByteFromData(15) * 256) + (getByteFromData(17))) / 60.0f);
-  return true;
-}
-
-#ifndef READ_OAR_INSTEAD_TEMPERATURE
-bool btSerialGetItempData()
-{
-  btSerialSendCommand("2211B2\r", 200);
-  btSerialReadAndAddToLog();
-  if (isReadCanError())
-  {
-    itemp_value = -100.0f;
-    return false;
-  }
-  itemp_value = ((((getByteFromData(11) * 256) + (getByteFromData(13))) - 2731) / 10.0f);
-  return true;
-}
-
-bool btSerialGetOtempData()
-{
-  btSerialSendCommand("2210F9\r", 200);
-  btSerialReadAndAddToLog();
-  if (isReadCanError())
-  {
-    otemp_value = -100.0f;
-    return false;
-  }
-  otemp_value = ((((getByteFromData(11) * 256) + (getByteFromData(13))) - 2731) / 10.0f);
-  return true;
-}
-#else
-bool btSerialGetOarData()
-{
-  btSerialSendCommand("22178C\r", 200);
-  btSerialReadAndAddToLog();
-  if (isReadCanError())
-  {
-    oar_value = -100.0f;
-    return false;
-  }
-  oar_value = (((getByteFromData(11) * 256) + (getByteFromData(13))) / 10.0f);
-  return true;
-}
+#ifdef RANDOM_DATA
+  *val = random(1, 100) / divider;
+  return (bool)random(0, 2);
 #endif
-
-void markReadingValue(int row, bool readResult)
-{
-  int xpos = 110, ypos = 10 * (row - 1);
-  displayText(xpos, ypos, (readResult == true ? "V" : "X"));
+  btSerialSendCommand(command, 200);
+  btSerialReadAndAddToLog();
+  if (isReadCanError())
+  {
+    *val = -100.0f;
+    return false;
+  }
+  *val = (((getByteFromData(11) * 256) + (getByteFromData(13))) / divider);
+  return true;
 }
 
-void btSerialGetData()
+bool calcFun_ABCD(char *command, float *val, float divider)
 {
-  bool readResult = btSerialGetSMMData();
-  markReadingValue(1, readResult);
-
-  readResult = btSerialGetSMCData();
-  markReadingValue(2, readResult);
-
-  readResult = btSerialGetSdlrData();
-  markReadingValue(3, readResult);
-
-  readResult = btSerialGetTslrData();
-  markReadingValue(4, readResult);
-
-#ifdef READ_OAR_INSTEAD_TEMPERATURE
-  readResult = btSerialGetOarData();
-  markReadingValue(5, readResult);
-#else
-  readResult = btSerialGetItempData();
-  markReadingValue(5, readResult);
-
-  readResult = btSerialGetOtempData();
-  markReadingValue(6, readResult);
+#ifdef RANDOM_DATA
+  *val = random(1, 100) / divider;
+  return (bool)random(0, 2);
 #endif
+  btSerialSendCommand(command, 200);
+  btSerialReadAndAddToLog();
+  if (isReadCanError())
+  {
+    *val = -100.0f;
+    return false;
+  }
+  *val = (((getByteFromData(11) * 16777216) + (getByteFromData(13) * 65536) + (getByteFromData(15) * 256) + (getByteFromData(17))) / divider);
+  return true;
 }
 
-void displayData()
+bool calcFun_Temperature(char *command, float *val, float divider)
+{
+#ifdef RANDOM_DATA
+  *val = random(1, 100) / divider;
+  return (bool)random(0, 2);
+#endif
+  btSerialSendCommand(command, 200);
+  btSerialReadAndAddToLog();
+  if (isReadCanError())
+  {
+    *val = -100.0f;
+    return false;
+  }
+  *val = ((((getByteFromData(11) * 256) + (getByteFromData(13))) - 2731) / divider);
+  return true;
+}
+
+void displayData(bool correctData, measurement_t *m)
 {
   int xpos = 0, ypos = 0;
 
   clearDisplay();
+  display->setFont(ArialMT_Plain_16);
+  displayText(xpos, ypos, m->caption);
 
-  displayText(xpos, ypos, "smm [g]:");
-  ypos += 10;
-  displayText(xpos, ypos, "smc [g]:");
-  ypos += 10;
-  displayText(xpos, ypos, "dslr [km]:");
-  ypos += 10;
-  displayText(xpos, ypos, "tslr [min]:");
-  ypos += 10;
-#ifdef READ_OAR_INSTEAD_TEMPERATURE
-  displayText(xpos, ypos, "oar [g]:");
-#else
-  displayText(xpos, ypos, "itemp [C]:");
-  ypos += 10;
-  displayText(xpos, ypos, "otemp [C]:");
-#endif
+  display->setFont(ArialMT_Plain_24);
+  if (correctData)
+    displayText(xpos, ypos + 25, String(m->value, 2) + " " + String(m->unit));
+  else
+    displayText(xpos, ypos + 25, "???");
 
-  xpos = 60;
-  ypos = 0;
-  displayText(xpos, ypos, (smm_value <= -100.0f ? "?" : String(smm_value, 2)));
-  ypos += 10;
-  displayText(xpos, ypos, (smc_value <= -100.0f ? "?" : String(smc_value, 2)));
-  ypos += 10;
-  displayText(xpos, ypos, (dslr_value <= -100.0f ? "?" : String(dslr_value, 2)));
-  ypos += 10;
-  displayText(xpos, ypos, (tslr_value <= -100.0f ? "?" : String(tslr_value, 2)));
-  ypos += 10;
-#ifdef READ_OAR_INSTEAD_TEMPERATURE
-  displayText(xpos, ypos, (oar_value <= -100.0f ? "?" : String(oar_value, 2)));
-#else
-  displayText(xpos, ypos, (itemp_value <= -100.0f ? "?" : String(itemp_value, 2)));
-  ypos += 10;
-  displayText(xpos, ypos, (otemp_value <= -100.0f ? "?" : String(otemp_value, 2)));
-#endif
+  display->setFont(ArialMT_Plain_10);
+  displayText(115, LAST_LINE - 5, (correctData == true ? "V" : "X"));
   Serial.println("========================");
-  Serial.println("smm_value: " + String(smm_value, 2) + "g, smc_value: " + String(smc_value, 2) + "g");
-  Serial.println("dslr_value (distance): " + String(dslr_value, 2) + "km, tslr_value (time): " + String(tslr_value, 2) + "min");
-#ifdef READ_OAR_INSTEAD_TEMPERATURE
-  Serial.println("oar_value (oil ash residue): " + String(oar_value, 2) + "g");
-#else
-  Serial.println("itemp_value (input t): " + String(itemp_value, 2) + "C, otemp_value (output t): " + String(otemp_value, 2) + "C");
-#endif
+  Serial.println("caption: " + String(m->caption) + ", isCorrectData: " + (correctData == true ? "Y" : "N") + ", value: " + String(m->value, 2));
   addToSerialLog("========================");
 }
 
@@ -561,6 +464,10 @@ void setup()
 #ifdef ENABLE_WIFI
   initWebserver();
 #endif
+
+#ifdef RANDOM_DATA
+  connected = true;
+#endif
 }
 
 void loop()
@@ -632,7 +539,7 @@ void loop()
 
     addToLog("Connected");
     btSerialInit();
-    displayData();
+    measurement_idx = 0;
   }
 
   if (!connected)
@@ -641,11 +548,18 @@ void loop()
     return;
   }
 
-  addToSerialLog("Receive data from OBD...");
-  btSerialGetData();
+  measurement_t *m = &measurements[measurement_idx];
+  bool correctData = m->calcFunPtr(m->command, &m->value, m->divider);
+
   addToSerialLog("Display data");
-  displayData();
+  displayData(correctData, m);
 
   addToSerialLog("Show progress bar");
   drawProgressBar();
+  measurement_idx++;
+  if (measurements[measurement_idx].id == 0 ||
+      measurements[measurement_idx].calcFunPtr == NULL)
+  {
+    measurement_idx = 0;
+  }
 }
