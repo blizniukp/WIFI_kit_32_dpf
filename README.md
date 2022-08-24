@@ -41,8 +41,8 @@
 
 The device connects to the OBD interface via Bluetooth and displays DPF status information.
 
-![pic02](/docs/pic02.png)
-![pic01](/docs/pic01.jpg)
+![pic03](/docs/pic03.png)
+![pic04](/docs/pic04.png)
 
 The following parameters are displayed:
 
@@ -50,19 +50,13 @@ The following parameters are displayed:
 * Soot mass calculated (smc)
 * Distance since last regeneration (dslr)
 * Time since last regeneration (tslr)
-
-Because of the small size of the display, the last item we display is selectable:
-* Oil Ash Residue (oar) - enabled by default
-or
+* Oil Ash Residue (oar)
 * Input temperature (itemp)
 * Output temperature (otemp)
 
-The choice of whether to display the oar or itemp+otemp parameter is made in the `platformio.ini` file by commenting or leaving the line:
-
-```-DREAD_OAR_INSTEAD_TEMPERATURE```
 
 The data is refreshed every 10 seconds. On the right side of the display, a correct `V` or incorrect `X` reading of a given parameter is marked.
-A progress bar is displayed at the bottom which counts down the time until the next data update.
+A progress bar is displayed at the bottom, counting down the time until the next parameter is checked.
 
 I tested the device only with the iCar2 Vgate interface, but I suspect it could work with any interface with the ELM 327.
 
@@ -105,7 +99,9 @@ We should have four files in the firmware package:
 
 You should extract them to some directory on your disk.
 
-After launching the `ESP32 DOWNLOAD TOOL` application, you need to point to these files and complete the fields analogously to the screenshot below, except that you need to enter the following addresses:
+After launching the `ESP32 DOWNLOAD TOOL` application, you need to point to these files and complete the fields analogously to the screenshot below.
+
+![esp32_download_tool](/docs/esp32_download_tool.png)
 
 ```
 bootloader_dio_40m.bin - 0x1000
@@ -113,8 +109,6 @@ partitions.bin - 0x8000
 boot_app0.bin - 0xe000
 firmware.bin - 0x10000
 ```
-
-![esp32_download_tool](/docs/esp32_download_tool.png)
 
 Press the `Start` button to start uploading the firmware to the device.
 
@@ -143,9 +137,11 @@ This is useful when a connection error occurs. And the problem occurs when you c
 
 ## Roadmap
 
-- [ ] Increase the font and display only one parameter at a time
+- [x] Increase the font and display only one parameter at a time
 - [ ] Ability to configure the device (specifying the name of the OBD interface and PIN code)
-- [ ] Update the screenshot from ESP32 DOWNLOAD TOOL (I'm using Linux, and this app is for Windows)
+- [x] Update the screenshot from ESP32 DOWNLOAD TOOL (I'm using Linux, and this app is for Windows)
+- [ ] Alarm (buzzer) when DPF regeneration begins and ends
+- [ ] Automatic removal of paired devices in case of connection error
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 

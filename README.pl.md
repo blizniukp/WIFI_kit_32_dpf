@@ -41,8 +41,8 @@
 
 Urządznie łączy się z interfejsem OBD po Bluetooth i wyświetla informacje o stanie DPF.
 
-![pic02](/docs/pic02.png)
-![pic01](/docs/pic01.jpg)
+![pic03](/docs/pic03.png)
+![pic04](/docs/pic04.png)
 
 Wyświetlane są następujące parametry:
 
@@ -50,19 +50,13 @@ Wyświetlane są następujące parametry:
 * Wyliczona masa sadzy (smc)
 * Dystans od ostatniej regeneracji (dslr)
 * Czas od ostatniej regeneracji (tslr)
-
-Z powodu małej wielkości wyświetlacza ostatni element który wyświetlamy jest do wyboru:
-* Pozostałość popiołu olejowego (oar) - domyślnie włączony
-lub
+* Pozostałość popiołu olejowego (oar)
 * Temperatura wejściowa (itemp)
 * Temperatura wyjściowa (otemp)
 
-Wybór czy mam być wyświetlany parametr oar czy itemp+otemp dokonumemy w pliku `platformio.ini` komentując lub pozostawając linię:
-
-```-DREAD_OAR_INSTEAD_TEMPERATURE```
 
 Dane odświeżane są co 10 sekund. Po prawej stronie wyświetlacza zaznaczany jest prawidłowy `V` lub nieprawidłowy `X` odczyt danego parametru.
-Na dole wyświetlany jest pasek postępu który odlicza czas do kolejnej aktualizacji danych.
+Na dole wyświetlany jest pasek postępu który odlicza czas do odpytania o kolejny parametr.
 
 Urządzenie testowałem tylko z interfejsem iCar2 Vgate, ale podejrzewam, że może działać w oparciu o dowolny interfejs z ELM 327.
 
@@ -105,7 +99,9 @@ W paczce z firmware powinniśmy mieć cztery pliki:
 
 Należy je wypakować do jakiegoś katalogu na dysku.
 
-Po uruchomieniu aplikacji `ESP32 DOWNLOAD TOOL` należy wskazać te pliki oraz uzupełnić pola analogicznie jak na zrzucie ekranu ekranu poniżej, z tą różnicą, że trzeba podać następujące adresy:
+Po uruchomieniu aplikacji `ESP32 DOWNLOAD TOOL` należy wskazać te pliki oraz uzupełnić pola analogicznie jak na zrzucie ekranu ekranu poniżej.
+
+![esp32_download_tool](/docs/esp32_download_tool.png)
 
 ```
 bootloader_dio_40m.bin - 0x1000
@@ -113,8 +109,6 @@ partitions.bin - 0x8000
 boot_app0.bin - 0xe000
 firmware.bin - 0x10000
 ```
-
-![esp32_download_tool](/docs/esp32_download_tool.png)
 
 Naciśnij przycisk `START` aby rozpocząć wgrywanie firmware do urządzenia.
 
@@ -143,9 +137,11 @@ Jest to przydatne w momencie występienia błędu podczas łączenia. A problem 
 
 ## Plan rozwoju
 
-- [ ] Zwiększenie czcionki i wyświetlanie tylko jednego parametru na raz
+- [x] Zwiększenie czcionki i wyświetlanie tylko jednego parametru na raz
 - [ ] Możliwość konfiguracji urządzenia (podanie nazwy interfejsu OBD oraz kodu PIN)
-- [ ] Zaktualizować zrzut ekranu z ESP32 DOWNLOAD TOOL (używam Linuxa, a ta aplikacja jest pod Windowsa)
+- [x] Zaktualizować zrzut ekranu z ESP32 DOWNLOAD TOOL (używam Linuxa, a ta aplikacja jest pod Windowsa)
+- [ ] Alarm (buzzer) w momencie rozpoczęcia i zakończenia regeneracji DPF
+- [ ] Automatyczne usuwanie sparowanych urządzeń w przypadku błędu połączenia
 
 <p align="right">(<a href="#top">powrót do góry</a>)</p>
 
