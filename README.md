@@ -142,6 +142,8 @@ This is useful when a connection error occurs. And the problem occurs when you c
 - [x] Update the screenshot from ESP32 DOWNLOAD TOOL (I'm using Linux, and this app is for Windows)
 - [ ] Alarm (buzzer) when DPF regeneration begins and ends
 - [ ] Automatic removal of paired devices in case of connection error
+- [ ] Save configurations to memory
+- [ ] Changing the display orientation
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 

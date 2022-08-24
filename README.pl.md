@@ -142,6 +142,8 @@ Jest to przydatne w momencie występienia błędu podczas łączenia. A problem 
 - [x] Zaktualizować zrzut ekranu z ESP32 DOWNLOAD TOOL (używam Linuxa, a ta aplikacja jest pod Windowsa)
 - [ ] Alarm (buzzer) w momencie rozpoczęcia i zakończenia regeneracji DPF
 - [ ] Automatyczne usuwanie sparowanych urządzeń w przypadku błędu połączenia
+- [ ] Zapis konfiguracji do pamięci
+- [ ] Zmiana orientacji wyświetlacza
 
 <p align="right">(<a href="#top">powrót do góry</a>)</p>
 
