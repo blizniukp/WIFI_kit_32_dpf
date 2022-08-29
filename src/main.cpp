@@ -8,9 +8,6 @@ AsyncWebServer server(80);
 AsyncWebSocket ws("/ws");
 #endif
 
-String bluetoothName = "WIFI_kit_32_dpf";
-String bluetoothPin = "1234";
-String defaultObdIfName = "V-LINK";
 const int READ_BUFFER_SIZE = 128;
 
 bool connected = false;
@@ -20,7 +17,7 @@ char rxData[READ_BUFFER_SIZE];
 uint8_t rxIndex = 0;
 bool connectByName = true;
 uint8_t pairedDeviceBtAddr[PAIR_MAX_DEVICES][6];
-char bda_str[18];
+char bdaStr[18];
 
 bool calcFun_AB(char *command, float *val, float divider);
 bool calcFun_ABCD(char *command, float *val, float divider);
@@ -38,6 +35,8 @@ measurement_t measurements[] = {
 };
 
 int measurement_idx = 0;
+
+configuration_t config;
 
 void initDisplay()
 {
@@ -101,8 +100,8 @@ bool connect()
   bool result = false;
   if (connectByName == true)
   {
-    addToLog("Connecting to: " + defaultObdIfName);
-    result = btSerial.connect(defaultObdIfName);
+    addToLog("Connecting to: " + config.bt_if_name);
+    result = btSerial.connect(config.bt_if_name);
     connectByName = false;
   }
   else
@@ -421,14 +420,30 @@ void handleRemove(AsyncWebServerRequest *request)
   request->send_P(200, "text/html", FRM_PASS);
 }
 
+void handleSave(AsyncWebServerRequest *request)
+{
+  addToSerialLog("Got handleSave");
+  if (request->hasParam(CFG_BT_IF_NAME))
+    config.bt_if_name = request->getParam(CFG_BT_IF_NAME)->value();
+  if (request->hasParam(CFG_BT_IF_PIN))
+    config.bt_if_pin = request->getParam(CFG_BT_IF_PIN)->value();
+
+  addToSerialLog("Save configuration");
+  config_save(&config);
+
+  addToSerialLog("Restart device");
+  ESP.restart();
+}
+
 void initWebserver()
 {
-  WiFi.softAP(ssid, password);
+  WiFi.softAP(config.wifi_ssid.c_str(), config.wifi_passwd.c_str());
   IPAddress myIP = WiFi.softAPIP();
   addToLog("AP IP address: ");
   addToLog(myIP.toString());
   server.on("/", HTTP_GET, handleRoot);
   server.on("/remove", HTTP_GET, handleRemove);
+  server.on("/save", HTTP_GET, handleSave);
   ws.onEvent(onEvent);
   server.addHandler(&ws);
   server.begin();
@@ -443,12 +458,18 @@ void setup()
   initDisplay();
   addToLog("Display initialized");
 
+  addToLog("Init configuration...");
+  config_init();
+
+  addToLog("Load configuration...");
+  config_load(&config);
+
   addToLog("Setup bluetooth...");
-  result = btSerial.begin(bluetoothName, true);
+  result = btSerial.begin(CFG_DEVICE_NAME_DEFAULT, true);
   addResultToLog(result);
 
   addToLog("Set bluetooth PIN...");
-  result = btSerial.setPin(bluetoothPin.c_str());
+  result = btSerial.setPin(config.bt_if_pin.c_str());
   addResultToLog(result);
 
   btSerial.enableSSP();
@@ -502,7 +523,7 @@ void loop()
           Serial.print("Found bonded device # ");
           Serial.print(i);
           Serial.print(" -> ");
-          Serial.println(bda2str(pairedDeviceBtAddr[i], bda_str, 18));
+          Serial.println(bda2str(pairedDeviceBtAddr[i], bdaStr, 18));
           if (REMOVE_BONDED_DEVICES)
           {
             esp_err_t tError = esp_bt_gap_remove_bond_device(pairedDeviceBtAddr[i]);

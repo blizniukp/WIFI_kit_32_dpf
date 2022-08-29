@@ -12,6 +12,7 @@
 #include "esp_gap_bt_api.h"
 #include "esp_err.h"
 #endif
+#include "config.hpp"
 
 #ifdef WEMOS_BOARD
 #define SDA_OLED 5
@@ -31,19 +32,19 @@
 #define REMOVE_BONDED_DEVICES 1
 
 #ifdef ENABLE_WIFI
-const char *ssid = "WIFI_kit_32_dpf";
-const char *password = "wifikit32";
-
 static const char FRM_PASS[] PROGMEM = R"rawliteral(<html>
 <meta name='viewport' content='width=device-width, initial-scale=1'>
 <body style='background-color:#161317; color: white'>
-  <form action='/remove'>
-    <input type='submit' value='Remove bonded devices'>
-  </form>
+<form action='/save'>
+  <label for='bt_name'>Bluetooth interface name</label><br>
+  <input type='text' id='bt_name' name='bt_name' value='' maxlength='32'><br>
+  <label for='bt_pin'>Pin</label><br>
+  <input type='text' id='bt_pin' name='bt_pin' value=''><br><br>
+  <input type='submit' value='Save'>
+  <br><br><br>
+  <form action='/remove'><input type='submit' value='Remove bonded devices'></form>
   <p>Bluetooth serial dump:</p>
-  <p>
-    <textarea name="serial" id="serial" rows="30" cols="40"></textarea>
-  </p>
+  <p><textarea name="serial" id="serial" rows="30" cols="40"></textarea></p>
 </body>
 <script>
   var gateway = `ws://${window.location.hostname}/ws`;
@@ -90,9 +91,9 @@ typedef struct measurement_def
 {
   byte id; /*Index*/
   char caption[MAX_CAPTION_LENGTH];
-  char command[MAX_COMMAND_LENGTH]; /*Command to send*/
-  char unit[MAX_UNIT_LENGTH]; /*Unit [g,km,min]*/
-  float value; /*Calculated value*/
+  char command[MAX_COMMAND_LENGTH];                             /*Command to send*/
+  char unit[MAX_UNIT_LENGTH];                                   /*Unit [g,km,min]*/
+  float value;                                                  /*Calculated value*/
   bool (*calcFunPtr)(char *command, float *val, float divider); /*A pointer to a function to retrieve and calculate values*/
-  float divider; /*Parameter to calc_fun*/
+  float divider;                                                /*Parameter to calc_fun*/
 } measurement_t;
