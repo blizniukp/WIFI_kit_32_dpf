@@ -138,7 +138,7 @@ This is useful when a connection error occurs. And the problem occurs when you c
 ## Roadmap
 
 - [x] Increase the font and display only one parameter at a time
-- [ ] Ability to configure the device (specifying the name of the OBD interface and PIN code)
+- [x] Ability to configure the device (specifying the name of the OBD interface and PIN code)
 - [x] Update the screenshot from ESP32 DOWNLOAD TOOL (I'm using Linux, and this app is for Windows)
 - [ ] Alarm (buzzer) when DPF regeneration begins and ends
 - [ ] Automatic removal of paired devices in case of connection error

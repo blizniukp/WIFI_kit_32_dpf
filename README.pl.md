@@ -138,7 +138,7 @@ Jest to przydatne w momencie występienia błędu podczas łączenia. A problem 
 ## Plan rozwoju
 
 - [x] Zwiększenie czcionki i wyświetlanie tylko jednego parametru na raz
-- [ ] Możliwość konfiguracji urządzenia (podanie nazwy interfejsu OBD oraz kodu PIN)
+- [x] Możliwość konfiguracji urządzenia (podanie nazwy interfejsu OBD oraz kodu PIN)
 - [x] Zaktualizować zrzut ekranu z ESP32 DOWNLOAD TOOL (używam Linuxa, a ta aplikacja jest pod Windowsa)
 - [ ] Alarm (buzzer) w momencie rozpoczęcia i zakończenia regeneracji DPF
 - [ ] Automatyczne usuwanie sparowanych urządzeń w przypadku błędu połączenia
