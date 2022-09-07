@@ -143,7 +143,7 @@ This is useful when a connection error occurs. And the problem occurs when you c
 - [ ] Alarm (buzzer) when DPF regeneration begins and ends
 - [ ] Automatic removal of paired devices in case of connection error
 - [ ] Save configurations to memory
-- [ ] Changing the display orientation
+- [x] Changing the display orientation
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 

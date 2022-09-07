@@ -143,7 +143,7 @@ Jest to przydatne w momencie występienia błędu podczas łączenia. A problem 
 - [ ] Alarm (buzzer) w momencie rozpoczęcia i zakończenia regeneracji DPF
 - [ ] Automatyczne usuwanie sparowanych urządzeń w przypadku błędu połączenia
 - [ ] Zapis konfiguracji do pamięci
-- [ ] Zmiana orientacji wyświetlacza
+- [x] Zmiana orientacji wyświetlacza
 
 <p align="right">(<a href="#top">powrót do góry</a>)</p>
 
