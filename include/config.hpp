@@ -1,3 +1,4 @@
+#include <stdbool.h>
 #include <Arduino.h>
 #include <Preferences.h>
 #include <nvs_flash.h>
@@ -16,6 +17,10 @@
 #define CFG_BT_IF_NAME_DEFAULT "V-LINK"
 #define CFG_BT_IF_PIN_DEFAULT "1234"
 
+#define CFG_NAMESPACE_DISPLAY "display"
+#define CFG_DISPLAY_FLIP_SCREEN "d_flip"
+#define CFG_DISPLAY_FLIP_SCREEN_DEFAULT false
+
 typedef struct configuration_def
 {
     String wifi_ssid;   /* AP SSID */
@@ -23,6 +28,8 @@ typedef struct configuration_def
 
     String bt_if_name; /* Bluetooth name of OBD interface */
     String bt_if_pin;  /* Pin to OBD interface */
+
+    bool display_flip_screen; /* Flip the screen */
 } configuration_t;
 
 void config_init();

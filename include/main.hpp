@@ -39,7 +39,9 @@ static const char FRM_PASS[] PROGMEM = R"rawliteral(<html>
   <label for='bt_name'>Bluetooth interface name</label><br>
   <input type='text' id='bt_name' name='bt_name' value='' maxlength='32'><br>
   <label for='bt_pin'>Pin</label><br>
-  <input type='text' id='bt_pin' name='bt_pin' value=''><br><br>
+  <input type='text' id='bt_pin' name='bt_pin' value=''><br>
+  <label for='d_flip'>Flip screen vertically</label><br>
+  <input type='checkbox' id='bt_pin' name='d_flip' value='d_flip'><br><br>
   <input type='submit' value='Save'>
   <br><br><br>
   <form action='/remove'><input type='submit' value='Remove bonded devices'></form>

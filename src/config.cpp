@@ -33,6 +33,12 @@ void config_load(configuration_t *cfg)
     cfg->bt_if_pin = pref.getString(CFG_BT_IF_PIN, CFG_BT_IF_PIN_DEFAULT);
     pref.end();
 
+    result = pref.begin(CFG_NAMESPACE_DISPLAY, true);
+    if (!result)
+        Serial.printf("Namespace %s not found. Use default values.\n", CFG_NAMESPACE_DISPLAY);
+    cfg->display_flip_screen = pref.getBool(CFG_DISPLAY_FLIP_SCREEN, CFG_DISPLAY_FLIP_SCREEN_DEFAULT);
+    pref.end();
+
 #if DEBUG
     Serial.println("Configuration:\nWiFi:");
     Serial.printf("%s: %s\n", CFG_WIFI_SSID, cfg->wifi_ssid.c_str());
@@ -40,6 +46,8 @@ void config_load(configuration_t *cfg)
     Serial.println("Bluetooth:");
     Serial.printf("%s: %s\n", CFG_BT_IF_NAME, cfg->bt_if_name.c_str());
     Serial.printf("%s: %s\n", CFG_BT_IF_PIN, cfg->bt_if_pin.c_str());
+    Serial.println("Display:");
+    Serial.printf("%s: %s\n", CFG_DISPLAY_FLIP_SCREEN, (cfg->display_flip_screen == true ? "Yes" : "No"));
 #endif
 }
 
@@ -63,6 +71,15 @@ bool config_save(configuration_t *cfg)
     }
     pref.putString(CFG_BT_IF_NAME, cfg->bt_if_name);
     pref.putString(CFG_BT_IF_PIN, cfg->bt_if_pin);
+    pref.end();
+
+    result = pref.begin(CFG_NAMESPACE_DISPLAY, false);
+    if (!result)
+    {
+        Serial.printf("Can't open namespace: %s\n", CFG_NAMESPACE_DISPLAY);
+        return false;
+    }
+    pref.putBool(CFG_DISPLAY_FLIP_SCREEN, cfg->display_flip_screen);
     pref.end();
     return true;
 }

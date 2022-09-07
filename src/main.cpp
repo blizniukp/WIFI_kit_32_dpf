@@ -427,6 +427,8 @@ void handleSave(AsyncWebServerRequest *request)
     config.bt_if_name = request->getParam(CFG_BT_IF_NAME)->value();
   if (request->hasParam(CFG_BT_IF_PIN))
     config.bt_if_pin = request->getParam(CFG_BT_IF_PIN)->value();
+  if (request->hasParam(CFG_DISPLAY_FLIP_SCREEN))
+    config.display_flip_screen = request->getParam(CFG_DISPLAY_FLIP_SCREEN)->value() == CFG_DISPLAY_FLIP_SCREEN ? true : false;
 
   addToSerialLog("Save configuration");
   config_save(&config);
@@ -463,6 +465,9 @@ void setup()
 
   addToLog("Load configuration...");
   config_load(&config);
+
+  if (config.display_flip_screen)
+    display->flipScreenVertically();
 
   addToLog("Setup bluetooth...");
   result = btSerial.begin(CFG_DEVICE_NAME_DEFAULT, true);
