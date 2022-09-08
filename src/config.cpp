@@ -1,6 +1,7 @@
 #include "config.hpp"
 
 Preferences pref;
+String config_page;
 
 void config_init()
 {
@@ -82,4 +83,79 @@ bool config_save(configuration_t *cfg)
     pref.putBool(CFG_DISPLAY_FLIP_SCREEN, cfg->display_flip_screen);
     pref.end();
     return true;
+}
+
+static String config_get_page_header()
+{
+    return R"rawliteral(<html>
+<meta name='viewport' content='width=device-width, initial-scale=1'>
+<body style='background-color:#161317; color: white'>)rawliteral";
+}
+
+static String config_get_page_footer()
+{
+    return R"rawliteral(<p>Bluetooth serial dump:</p>
+  <p><textarea name="serial" id="serial" rows="30" cols="40"></textarea></p>
+</body>
+<script>
+  var gateway = `ws://${window.location.hostname}/ws`;
+  var websocket;
+  function initWebSocket() {
+    console.log('Trying to open a WebSocket connection...');
+    websocket = new WebSocket(gateway);
+    websocket.onopen    = onOpen;
+    websocket.onclose   = onClose;
+    websocket.onmessage = onMessage; 
+  }
+  function onOpen(event) {
+    console.log('Connection opened');
+  }
+  function onClose(event) {
+    console.log('Connection closed');
+    setTimeout(initWebSocket, 2000);
+  }
+  
+  function onMessage(event) {
+    var txtArea = document.getElementById('serial');
+    txtArea.innerHTML = txtArea.innerHTML + event.data;
+    txtArea.scrollTop = txtArea.scrollHeight;
+  }
+  
+  function onLoad(event) {
+    initWebSocket();
+  }
+  function toggle(){
+    websocket.send('toggle');
+  }
+  
+  window.addEventListener('load', onLoad);
+</script>
+</html>)rawliteral";
+}
+
+static String config_get_page_body(configuration_t *cfg)
+{
+    String flip_screen = cfg->display_flip_screen == true ? "checked" : "";
+    String body_page = "<form action='/save'>";
+    body_page += "<label for='bt_name'>Bluetooth interface name</label><br>";
+    body_page += "<input type='text' id='bt_name' name='bt_name' value='" + cfg->bt_if_name + "' maxlength='32'><br>";
+    body_page += "<label for='bt_pin'>Pin</label><br>";
+    body_page += "<input type='text' id='bt_pin' name='bt_pin' value='" + cfg->bt_if_pin + "'><br>";
+    body_page += "<label for='d_flip'>Flip screen vertically</label><br>";
+    body_page += "<input type='checkbox' id='d_flip' name='d_flip' value='d_flip' " + flip_screen + " ><br><br>";
+    body_page += "<input type='submit' value='Save'>";
+    body_page += "<br><br><br>";
+    body_page += "<form action='/remove'><input type='submit' value='Remove bonded devices'></form>";
+    return body_page;
+}
+
+const char *config_get_page(configuration_t *cfg)
+{
+    if (!config_page.isEmpty())
+        config_page.clear();
+
+    config_page += config_get_page_header();
+    config_page += config_get_page_body(cfg);
+    config_page += config_get_page_footer();
+    return config_page.c_str();
 }

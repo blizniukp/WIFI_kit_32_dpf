@@ -35,3 +35,4 @@ typedef struct configuration_def
 void config_init();
 void config_load(configuration_t *cfg);
 bool config_save(configuration_t *cfg);
+const char *config_get_page(configuration_t *cfg);

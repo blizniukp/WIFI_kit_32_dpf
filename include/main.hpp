@@ -31,60 +31,6 @@
 #define PAIR_MAX_DEVICES 20
 #define REMOVE_BONDED_DEVICES 1
 
-#ifdef ENABLE_WIFI
-static const char FRM_PASS[] PROGMEM = R"rawliteral(<html>
-<meta name='viewport' content='width=device-width, initial-scale=1'>
-<body style='background-color:#161317; color: white'>
-<form action='/save'>
-  <label for='bt_name'>Bluetooth interface name</label><br>
-  <input type='text' id='bt_name' name='bt_name' value='' maxlength='32'><br>
-  <label for='bt_pin'>Pin</label><br>
-  <input type='text' id='bt_pin' name='bt_pin' value=''><br>
-  <label for='d_flip'>Flip screen vertically</label><br>
-  <input type='checkbox' id='bt_pin' name='d_flip' value='d_flip'><br><br>
-  <input type='submit' value='Save'>
-  <br><br><br>
-  <form action='/remove'><input type='submit' value='Remove bonded devices'></form>
-  <p>Bluetooth serial dump:</p>
-  <p><textarea name="serial" id="serial" rows="30" cols="40"></textarea></p>
-</body>
-<script>
-  var gateway = `ws://${window.location.hostname}/ws`;
-  var websocket;
-  function initWebSocket() {
-    console.log('Trying to open a WebSocket connection...');
-    websocket = new WebSocket(gateway);
-    websocket.onopen    = onOpen;
-    websocket.onclose   = onClose;
-    websocket.onmessage = onMessage; 
-  }
-  function onOpen(event) {
-    console.log('Connection opened');
-  }
-  function onClose(event) {
-    console.log('Connection closed');
-    setTimeout(initWebSocket, 2000);
-  }
-  
-  function onMessage(event) {
-    var txtArea = document.getElementById('serial');
-    txtArea.innerHTML = txtArea.innerHTML + event.data;
-    txtArea.scrollTop = txtArea.scrollHeight;
-  }
-  
-  function onLoad(event) {
-    initWebSocket();
-  }
-  function toggle(){
-    websocket.send('toggle');
-  }
-  
-  window.addEventListener('load', onLoad);
-</script>
-</html>
-)rawliteral";
-#endif
-
 #define MAX_UNIT_LENGTH (4)
 #define MAX_COMMAND_LENGTH (9)
 #define MAX_CAPTION_LENGTH (30)

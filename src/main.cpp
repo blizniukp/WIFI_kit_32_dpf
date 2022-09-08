@@ -378,7 +378,7 @@ void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType 
 
 void handleRoot(AsyncWebServerRequest *request)
 {
-  request->send_P(200, "text/html", FRM_PASS);
+  request->send_P(200, "text/html", config_get_page(&config));
 }
 
 bool initBluetooth()
@@ -417,7 +417,7 @@ char *bda2str(const uint8_t *bda, char *str, size_t size)
 void handleRemove(AsyncWebServerRequest *request)
 {
   removeBondedDevices = true;
-  request->send_P(200, "text/html", FRM_PASS);
+  request->send_P(200, "text/html", config_get_page(&config));
 }
 
 void handleSave(AsyncWebServerRequest *request)
