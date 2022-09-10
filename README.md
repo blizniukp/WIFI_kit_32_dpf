@@ -58,6 +58,8 @@ The following parameters are displayed:
 The data is refreshed every 10 seconds. On the right side of the display, a correct `V` or incorrect `X` reading of a given parameter is marked.
 A progress bar is displayed at the bottom, counting down the time until the next parameter is checked.
 
+Each of the readable parameters can be turned on or off.
+
 I tested the device only with the iCar2 Vgate interface, but I suspect it could work with any interface with the ELM 327.
 
 I based the project https://github.com/yangosoft/dpf
@@ -127,7 +129,7 @@ Password: `wifikit32`
 
 After connecting and accessing the 192.168.4.1 address, we have the ability to preview communication and remove paired devices.
 
-![Screenshot](docs/esp_website.png)
+![Screenshot](docs/esp_website.jpg)
 
 
 The 'Remove bonded devices' button starts the procedure for removing paired Bluetooth devices on the ESP32 module.
@@ -142,7 +144,7 @@ This is useful when a connection error occurs. And the problem occurs when you c
 - [x] Update the screenshot from ESP32 DOWNLOAD TOOL (I'm using Linux, and this app is for Windows)
 - [ ] Alarm (buzzer) when DPF regeneration begins and ends
 - [ ] Automatic removal of paired devices in case of connection error
-- [ ] Save configurations to memory
+- [x] Save configurations to memory
 - [x] Changing the display orientation
 
 <p align="right">(<a href="#top">back to top</a>)</p>

@@ -127,7 +127,7 @@ Hasło to: `wifikit32`
 
 Po połączeniu się i wejściu na adres 192.168.4.1 mamy możliwość podejrzenia komunikacji oraz usunięcia sparowanych urządzeń.
 
-![Screenshot](docs/esp_website.png)
+![Screenshot](docs/esp_website.jpg)
 
 
 Przycisk 'Remove bonded devices' rozpoczyna procedurę usunięcia sparowanych urządzeń Bluetooth w module ESP32.
@@ -142,7 +142,7 @@ Jest to przydatne w momencie występienia błędu podczas łączenia. A problem 
 - [x] Zaktualizować zrzut ekranu z ESP32 DOWNLOAD TOOL (używam Linuxa, a ta aplikacja jest pod Windowsa)
 - [ ] Alarm (buzzer) w momencie rozpoczęcia i zakończenia regeneracji DPF
 - [ ] Automatyczne usuwanie sparowanych urządzeń w przypadku błędu połączenia
-- [ ] Zapis konfiguracji do pamięci
+- [x] Zapis konfiguracji do pamięci
 - [x] Zmiana orientacji wyświetlacza
 
 <p align="right">(<a href="#top">powrót do góry</a>)</p>
