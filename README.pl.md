@@ -58,6 +58,8 @@ Wyświetlane są następujące parametry:
 Dane odświeżane są co 10 sekund. Po prawej stronie wyświetlacza zaznaczany jest prawidłowy `V` lub nieprawidłowy `X` odczyt danego parametru.
 Na dole wyświetlany jest pasek postępu który odlicza czas do odpytania o kolejny parametr.
 
+Każdy z odczytywanych parametrów można włączyć lub wyłączyć.
+
 Urządzenie testowałem tylko z interfejsem iCar2 Vgate, ale podejrzewam, że może działać w oparciu o dowolny interfejs z ELM 327.
 
 Bazowałem na projekcie https://github.com/yangosoft/dpf
