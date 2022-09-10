@@ -24,13 +24,13 @@ bool calcFun_ABCD(char *command, float *val, float divider);
 bool calcFun_Temperature(char *command, float *val, float divider);
 
 measurement_t measurements[] = {
-    {1, "Soot mass measured", "22114E1\r", "g", -100.0f, &calcFun_AB, 100.0f},
-    {2, "Soot mass calculated", "22114F1\r", "g", -100.0f, &calcFun_AB, 100.0f},
-    {3, "Distance since last regen.", "221156\r", "km", -100.0f, &calcFun_ABCD, 1000.0f},
-    {4, "Time since last regen", "22115E\r", "min", -100.0f, &calcFun_ABCD, 60.0f},
-    {5, "Input temperature", "2211B2\r", "*C", -100.0f, &calcFun_Temperature, 10.0f},
-    {6, "Outptu temperature", "2210F9\r", "*C", -100.0f, &calcFun_Temperature, 10.0f},
-    {7, "Oil Ash Residue", "22178C\r", "g", -100.0f, &calcFun_AB, 10.0f},
+    {1, "Soot mass measured", "22114E1\r", "g", -100.0f, &calcFun_AB, 100.0f, true},
+    {2, "Soot mass calculated", "22114F1\r", "g", -100.0f, &calcFun_AB, 100.0f, true},
+    {3, "Distance since last regen.", "221156\r", "km", -100.0f, &calcFun_ABCD, 1000.0f, true},
+    {4, "Time since last regen", "22115E\r", "min", -100.0f, &calcFun_ABCD, 60.0f, false},
+    {5, "Input temperature", "2211B2\r", "*C", -100.0f, &calcFun_Temperature, 10.0f, true},
+    {6, "Outptu temperature", "2210F9\r", "*C", -100.0f, &calcFun_Temperature, 10.0f, false},
+    {7, "Oil Ash Residue", "22178C\r", "g", -100.0f, &calcFun_AB, 10.0f, false},
     {0, "", "", "", 0.0f, NULL, 0.0f},
 };
 
@@ -378,7 +378,7 @@ void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType 
 
 void handleRoot(AsyncWebServerRequest *request)
 {
-  request->send_P(200, "text/html", config_get_page(&config));
+  request->send_P(200, "text/html", config_get_page(&config, measurements));
 }
 
 bool initBluetooth()
@@ -417,7 +417,7 @@ char *bda2str(const uint8_t *bda, char *str, size_t size)
 void handleRemove(AsyncWebServerRequest *request)
 {
   removeBondedDevices = true;
-  request->send_P(200, "text/html", config_get_page(&config));
+  request->send_P(200, "text/html", config_get_page(&config, measurements));
 }
 
 void handleSave(AsyncWebServerRequest *request)
@@ -430,8 +430,19 @@ void handleSave(AsyncWebServerRequest *request)
   if (request->hasParam(CFG_DISPLAY_FLIP_SCREEN))
     config.display_flip_screen = request->getParam(CFG_DISPLAY_FLIP_SCREEN)->value() == CFG_DISPLAY_FLIP_SCREEN ? true : false;
 
+  for (int i = 0; true; i++)
+  {
+    if (measurements[i].id == 0 || measurements[i].calcFunPtr == NULL)
+      break;
+    String pname = "m_" + String(measurements[i].id);
+    if (request->hasParam(pname))
+      measurements[i].enabled = true;
+    else
+      measurements[i].enabled = false;
+  }
+
   addToSerialLog("Save configuration");
-  config_save(&config);
+  config_save(&config, measurements);
 
   addToSerialLog("Restart device");
   ESP.restart();
@@ -464,7 +475,7 @@ void setup()
   config_init();
 
   addToLog("Load configuration...");
-  config_load(&config);
+  config_load(&config, measurements);
 
   if (config.display_flip_screen)
     display->flipScreenVertically();
@@ -582,10 +593,13 @@ void loop()
 
   addToSerialLog("Show progress bar");
   drawProgressBar();
-  measurement_idx++;
-  if (measurements[measurement_idx].id == 0 ||
-      measurements[measurement_idx].calcFunPtr == NULL)
+  do
   {
-    measurement_idx = 0;
-  }
+    measurement_idx++;
+    if (measurements[measurement_idx].id == 0 ||
+        measurements[measurement_idx].calcFunPtr == NULL)
+    {
+      measurement_idx = 0;
+    }
+  } while (!measurements[measurement_idx].enabled);
 }

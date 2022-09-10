@@ -1,7 +1,11 @@
+#ifndef CONFIG_HPP
+#define CONFIG_HPP
+
 #include <stdbool.h>
 #include <Arduino.h>
 #include <Preferences.h>
 #include <nvs_flash.h>
+#include "measurement.hpp"
 
 #define CFG_NAMESPACE_WIFI "wifi"
 #define CFG_WIFI_SSID "wifi_ssid"
@@ -21,6 +25,8 @@
 #define CFG_DISPLAY_FLIP_SCREEN "d_flip"
 #define CFG_DISPLAY_FLIP_SCREEN_DEFAULT false
 
+#define CFG_NAMESPACE_MEASUREMENTS "measurements"
+
 typedef struct configuration_def
 {
     String wifi_ssid;   /* AP SSID */
@@ -33,6 +39,7 @@ typedef struct configuration_def
 } configuration_t;
 
 void config_init();
-void config_load(configuration_t *cfg);
-bool config_save(configuration_t *cfg);
-const char *config_get_page(configuration_t *cfg);
+void config_load(configuration_t *cfg, measurement_t m[]);
+bool config_save(configuration_t *cfg, measurement_t m[]);
+const char *config_get_page(configuration_t *cfg, measurement_t *m);
+#endif
