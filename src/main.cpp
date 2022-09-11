@@ -22,16 +22,17 @@ char bdaStr[18];
 bool calcFun_AB(char *command, float *val, float divider);
 bool calcFun_ABCD(char *command, float *val, float divider);
 bool calcFun_Temperature(char *command, float *val, float divider);
+void dataReadFun_Temperature(float value);
 
 measurement_t measurements[] = {
-    {1, "Soot mass measured", "22114E1\r", "g", -100.0f, &calcFun_AB, 100.0f, true},
-    {2, "Soot mass calculated", "22114F1\r", "g", -100.0f, &calcFun_AB, 100.0f, true},
-    {3, "Distance since last regen.", "221156\r", "km", -100.0f, &calcFun_ABCD, 1000.0f, true},
-    {4, "Time since last regen", "22115E\r", "min", -100.0f, &calcFun_ABCD, 60.0f, false},
-    {5, "Input temperature", "2211B2\r", "*C", -100.0f, &calcFun_Temperature, 10.0f, true},
-    {6, "Outptu temperature", "2210F9\r", "*C", -100.0f, &calcFun_Temperature, 10.0f, false},
-    {7, "Oil Ash Residue", "22178C\r", "g", -100.0f, &calcFun_AB, 10.0f, false},
-    {0, "", "", "", 0.0f, NULL, 0.0f},
+    {1, "Soot mass measured", "22114E1\r", "g", -100.0f, &calcFun_AB, 100.0f, true, NULL},
+    {2, "Soot mass calculated", "22114F1\r", "g", -100.0f, &calcFun_AB, 100.0f, true, NULL},
+    {3, "Distance since last regen.", "221156\r", "km", -100.0f, &calcFun_ABCD, 1000.0f, true, NULL},
+    {4, "Time since last regen", "22115E\r", "min", -100.0f, &calcFun_ABCD, 60.0f, false, NULL},
+    {5, "Input temperature", "2211B2\r", "*C", -100.0f, &calcFun_Temperature, 10.0f, true, &dataReadFun_Temperature},
+    {6, "Outptu temperature", "2210F9\r", "*C", -100.0f, &calcFun_Temperature, 10.0f, false, NULL},
+    {7, "Oil Ash Residue", "22178C\r", "g", -100.0f, &calcFun_AB, 10.0f, false, NULL},
+    {0, "", "", "", 0.0f, NULL, 0.0f, false},
 };
 
 int measurement_idx = 0;
@@ -325,6 +326,11 @@ bool calcFun_Temperature(char *command, float *val, float divider)
   return true;
 }
 
+void dataReadFun_Temperature(float value)
+{
+  buzzer_set_temperature(value);
+}
+
 void displayData(bool correctData, measurement_t *m)
 {
   int xpos = 0, ypos = 0;
@@ -480,6 +486,10 @@ void setup()
   if (config.display_flip_screen)
     display->flipScreenVertically();
 
+  addToLog("Enable buzzer");
+  buzzer_init(BUZZER_PIN);
+  buzzer_set_threshold(config.temperautre_threshold);
+
   addToLog("Setup bluetooth...");
   result = btSerial.begin(CFG_DEVICE_NAME_DEFAULT, true);
   addResultToLog(result);
@@ -587,6 +597,9 @@ void loop()
 
   measurement_t *m = &measurements[measurement_idx];
   bool correctData = m->calcFunPtr(m->command, &m->value, m->divider);
+
+  if (correctData && m->dataReadFunPtr)
+    m->dataReadFunPtr(m->value);
 
   addToSerialLog("Display data");
   displayData(correctData, m);

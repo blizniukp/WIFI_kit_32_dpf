@@ -17,5 +17,6 @@ typedef struct measurement_def
     bool (*calcFunPtr)(char *command, float *val, float divider); /*A pointer to a function to retrieve and calculate values*/
     float divider;                                                /*Parameter to calc_fun*/
     bool enabled;                                                 /*Is measurement on?*/
+    void (*dataReadFunPtr)(float value);                          /*Function executed after reading the value*/
 } measurement_t;
 #endif

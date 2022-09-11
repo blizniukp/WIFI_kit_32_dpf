@@ -54,6 +54,14 @@ void config_load(configuration_t *cfg, measurement_t m[])
   }
   pref.end();
 
+  result = pref.begin(CFG_NAMESPACE_BUZZER, true);
+  if (!result)
+  {
+    Serial.printf("Namespace %s not found. Use default values.\n", CFG_NAMESPACE_BUZZER);
+  }
+  cfg->temperautre_threshold = pref.getFloat(CFG_BUZZER_THRESHOLD, CFG_BUZZER_THRESHOLD_DEFAULT);
+  pref.end();
+
 #if DEBUG
   Serial.println("Configuration:\nWiFi:");
   Serial.printf("%s: %s\n", CFG_WIFI_SSID, cfg->wifi_ssid.c_str());
@@ -71,6 +79,8 @@ void config_load(configuration_t *cfg, measurement_t m[])
     Serial.print("m_" + String(m[i].id));
     Serial.printf(": %s\n", m[i].enabled == true ? "true" : "false");
   }
+  Serial.println("Buzzer:");
+  Serial.printf("%s: %s\n", CFG_BUZZER_THRESHOLD, String(cfg->temperautre_threshold).c_str());
 #endif
 }
 
@@ -118,6 +128,15 @@ bool config_save(configuration_t *cfg, measurement_t m[])
     String key = "m_" + String(m[i].id);
     pref.putBool(key.c_str(), m[i].enabled);
   }
+  pref.end();
+
+  result = pref.begin(CFG_NAMESPACE_BUZZER, false);
+  if (!result)
+  {
+    Serial.printf("Can't open namespace: %s\n", CFG_NAMESPACE_BUZZER);
+    return false;
+  }
+  pref.putFloat(CFG_BUZZER_THRESHOLD, cfg->temperautre_threshold);
   pref.end();
 
   return true;
@@ -179,6 +198,8 @@ static String config_get_page_body(configuration_t *cfg, measurement_t *m)
   body_page += "<input type='text' id='bt_name' name='bt_name' value='" + cfg->bt_if_name + "' maxlength='32'><br>";
   body_page += "<label for='bt_pin'>Pin</label><br>";
   body_page += "<input type='text' id='bt_pin' name='bt_pin' value='" + cfg->bt_if_pin + "'><br>";
+  body_page += "<label for='buzzer_t'>Temperature threshold to activates the buzzer alarm.</label><br>";
+  body_page += "<input type='text' id='buzzer_t' name='buzzer_t' value='" + String(cfg->temperautre_threshold) + "'><br>";
   body_page += "<label for='d_flip'>Flip screen vertically</label><br>";
   body_page += "<input type='checkbox' id='d_flip' name='d_flip' value='d_flip' " + flip_screen + " ><br><br>";
 

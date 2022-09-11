@@ -27,6 +27,11 @@
 
 #define CFG_NAMESPACE_MEASUREMENTS "measurements"
 
+#define CFG_NAMESPACE_BUZZER "buzzer"
+#define BUZZER_PIN 12
+#define CFG_BUZZER_THRESHOLD "buzzer_t"
+#define CFG_BUZZER_THRESHOLD_DEFAULT 400.0f
+
 typedef struct configuration_def
 {
     String wifi_ssid;   /* AP SSID */
@@ -36,6 +41,8 @@ typedef struct configuration_def
     String bt_if_pin;  /* Pin to OBD interface */
 
     bool display_flip_screen; /* Flip the screen */
+
+    float temperautre_threshold; /*The temperature threshold that activates the buzzer alarm.*/
 } configuration_t;
 
 void config_init();

@@ -14,6 +14,7 @@
 #endif
 #include "config.hpp"
 #include "measurement.hpp"
+#include "buzzer.hpp"
 
 #ifdef WEMOS_BOARD
 #define SDA_OLED 5
