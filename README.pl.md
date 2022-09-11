@@ -83,6 +83,8 @@ Wyboru płytki dokonujemy w pliku `platformio.ini` pozostawiając odkomentowaną
 ;-DWEMOS_BOARD
 ```
 
+Opcjonalnie można dodać buzzer (z generatorem) który informuje o momencie rozpoczęcia oraz zakończenia wypalania DPF. Buzzer należy wpiąc pomiędzy pin GND oraz D12.
+
 <p align="right">(<a href="#top">powrót do góry</a>)</p>
 
 ## Wgrywanie firmware do urządzenia
@@ -142,7 +144,7 @@ Jest to przydatne w momencie występienia błędu podczas łączenia. A problem 
 - [x] Zwiększenie czcionki i wyświetlanie tylko jednego parametru na raz
 - [x] Możliwość konfiguracji urządzenia (podanie nazwy interfejsu OBD oraz kodu PIN)
 - [x] Zaktualizować zrzut ekranu z ESP32 DOWNLOAD TOOL (używam Linuxa, a ta aplikacja jest pod Windowsa)
-- [ ] Alarm (buzzer) w momencie rozpoczęcia i zakończenia regeneracji DPF
+- [x] Alarm (buzzer) w momencie rozpoczęcia i zakończenia regeneracji DPF
 - [ ] Automatyczne usuwanie sparowanych urządzeń w przypadku błędu połączenia
 - [x] Zapis konfiguracji do pamięci
 - [x] Zmiana orientacji wyświetlacza

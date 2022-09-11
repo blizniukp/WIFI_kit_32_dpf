@@ -83,6 +83,8 @@ The board selection is made in the `platformio.ini` file by leaving one of the o
 ;-DWEMOS_BOARD
 ```
 
+Optionally, you can add a buzzer (with a generator) that informs you when the DPF regeneration starts and stops. The buzzer should be connected between the GND and D12 pins.
+
 <p align="right">(<a href="#top">back to top</a>)</p>
 
 ## Uploading firmware to the device
@@ -142,7 +144,7 @@ This is useful when a connection error occurs. And the problem occurs when you c
 - [x] Increase the font and display only one parameter at a time
 - [x] Ability to configure the device (specifying the name of the OBD interface and PIN code)
 - [x] Update the screenshot from ESP32 DOWNLOAD TOOL (I'm using Linux, and this app is for Windows)
-- [ ] Alarm (buzzer) when DPF regeneration begins and ends
+- [x] Alarm (buzzer) when DPF regeneration begins and ends
 - [ ] Automatic removal of paired devices in case of connection error
 - [x] Save configurations to memory
 - [x] Changing the display orientation
