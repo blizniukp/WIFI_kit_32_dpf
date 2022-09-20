@@ -35,7 +35,7 @@ measurement_t measurements[] = {
     {0, "", "", "", 0.0f, NULL, 0.0f, false},
 };
 
-int measurement_idx = 0;
+int measurementIndex = 0;
 
 configuration_t config;
 
@@ -58,6 +58,11 @@ void clearDisplay()
   logLineNumber = 0;
 }
 
+void addToSerialLog(String text)
+{
+  Serial.println(text);
+}
+
 void addToLog(String text)
 {
   if (logLineNumber >= MAX_LOG_LINES)
@@ -66,26 +71,19 @@ void addToLog(String text)
   }
 
   displayText(0, logLineNumber, text);
-  Serial.println(text);
+  addToSerialLog(text);
 
   logLineNumber += 10;
 }
 
-void addToSerialLog(String text)
-{
-  Serial.println(text);
-}
-
 void addBtResponseToSerialLog(String text)
 {
-  Serial.print("< ");
-  Serial.println(text);
+  addToSerialLog("< " + text);
 }
 
 void addBtCommandToSerialLog(String text)
 {
-  Serial.print("> ");
-  Serial.println(text);
+  addToSerialLog("> " + text);
 }
 
 void addResultToLog(bool result)
@@ -347,8 +345,7 @@ void displayData(bool correctData, measurement_t *m)
 
   display->setFont(ArialMT_Plain_10);
   displayText(115, LAST_LINE - 5, (correctData == true ? "V" : "X"));
-  Serial.println("========================");
-  Serial.println("caption: " + String(m->caption) + ", isCorrectData: " + (correctData == true ? "Y" : "N") + ", value: " + String(m->value, 2));
+  addToSerialLog("caption: " + String(m->caption) + ", isCorrectData: " + (correctData == true ? "Y" : "N") + ", value: " + String(m->value, 2));
   addToSerialLog("========================");
 }
 
@@ -370,10 +367,10 @@ void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType 
   switch (type)
   {
   case WS_EVT_CONNECT:
-    Serial.printf("WebSocket client #%u connected from %s\n", client->id(), client->remoteIP().toString().c_str());
+    addToSerialLog("WebSocket client " + String(client->id()) + " connected from " + client->remoteIP().toString());
     break;
   case WS_EVT_DISCONNECT:
-    Serial.printf("WebSocket client #%u disconnected\n", client->id());
+    addToSerialLog("WebSocket client " + String(client->id()) + " disconnected");
     break;
   case WS_EVT_DATA:
   case WS_EVT_PONG:
@@ -391,19 +388,19 @@ bool initBluetooth()
 {
   if (!btStart())
   {
-    Serial.println("Failed to initialize controller");
+    addToSerialLog("Failed to initialize controller");
     return false;
   }
 
   if (esp_bluedroid_init() != ESP_OK)
   {
-    Serial.println("Failed to initialize bluedroid");
+    addToSerialLog("Failed to initialize bluedroid");
     return false;
   }
 
   if (esp_bluedroid_enable() != ESP_OK)
   {
-    Serial.println("Failed to enable bluedroid");
+    addToSerialLog("Failed to enable bluedroid");
     return false;
   }
   return true;
@@ -469,6 +466,41 @@ void initWebserver()
 }
 #endif
 
+void deleteBondedDevices()
+{
+  initBluetooth();
+  int count = esp_bt_gap_get_bond_device_num();
+  if (!count)
+  {
+    addToSerialLog("No bonded device found.");
+  }
+  else
+  {
+    addToSerialLog("Bonded device count: " + String(count));
+    if (PAIR_MAX_DEVICES < count)
+    {
+      count = PAIR_MAX_DEVICES;
+      addToSerialLog("Reset bonded device count: " + String(count));
+    }
+    esp_err_t tError = esp_bt_gap_get_bond_device_list(&count, pairedDeviceBtAddr);
+    if (ESP_OK == tError)
+    {
+      for (int i = 0; i < count; i++)
+      {
+        addToSerialLog("Found bonded device # " + String(i) + " -> " + bda2str(pairedDeviceBtAddr[i], bdaStr, 18));
+        if (REMOVE_BONDED_DEVICES)
+        {
+          esp_err_t tError = esp_bt_gap_remove_bond_device(pairedDeviceBtAddr[i]);
+          if (ESP_OK == tError)
+            addToSerialLog("Removed bonded device # " + String(i));
+          else
+            addToSerialLog("Failed to remove bonded device # " + String(i));
+        }
+      }
+    }
+  }
+}
+
 void setup()
 {
   Serial.begin(115200);
@@ -525,47 +557,7 @@ void loop()
   if (removeBondedDevices)
   {
     removeBondedDevices = false;
-    initBluetooth();
-    int count = esp_bt_gap_get_bond_device_num();
-    if (!count)
-    {
-      Serial.println("No bonded device found.");
-    }
-    else
-    {
-      Serial.print("Bonded device count: ");
-      Serial.println(count);
-      if (PAIR_MAX_DEVICES < count)
-      {
-        count = PAIR_MAX_DEVICES;
-        Serial.print("Reset bonded device count: ");
-        Serial.println(count);
-      }
-      esp_err_t tError = esp_bt_gap_get_bond_device_list(&count, pairedDeviceBtAddr);
-      if (ESP_OK == tError)
-      {
-        for (int i = 0; i < count; i++)
-        {
-          Serial.print("Found bonded device # ");
-          Serial.print(i);
-          Serial.print(" -> ");
-          Serial.println(bda2str(pairedDeviceBtAddr[i], bdaStr, 18));
-          if (REMOVE_BONDED_DEVICES)
-          {
-            esp_err_t tError = esp_bt_gap_remove_bond_device(pairedDeviceBtAddr[i]);
-            if (ESP_OK == tError)
-            {
-              Serial.print("Removed bonded device # ");
-            }
-            else
-            {
-              Serial.print("Failed to remove bonded device # ");
-            }
-            Serial.println(i);
-          }
-        }
-      }
-    }
+    deleteBondedDevices();
   }
 #endif
 
@@ -586,7 +578,7 @@ void loop()
 
     addToLog("Connected");
     btSerialInit();
-    measurement_idx = 0;
+    measurementIndex = 0;
   }
 
   if (!connected)
@@ -595,7 +587,7 @@ void loop()
     return;
   }
 
-  measurement_t *m = &measurements[measurement_idx];
+  measurement_t *m = &measurements[measurementIndex];
   bool correctData = m->calcFunPtr(m->command, &m->value, m->divider);
 
   if (correctData && m->dataReadFunPtr)
@@ -608,11 +600,11 @@ void loop()
   drawProgressBar();
   do
   {
-    measurement_idx++;
-    if (measurements[measurement_idx].id == 0 ||
-        measurements[measurement_idx].calcFunPtr == NULL)
+    measurementIndex++;
+    if (measurements[measurementIndex].id == 0 ||
+        measurements[measurementIndex].calcFunPtr == NULL)
     {
-      measurement_idx = 0;
+      measurementIndex = 0;
     }
-  } while (!measurements[measurement_idx].enabled);
+  } while (!measurements[measurementIndex].enabled);
 }
