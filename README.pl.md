@@ -41,6 +41,8 @@
 
 Urządznie łączy się z interfejsem OBD po Bluetooth i wyświetla informacje o stanie DPF.
 
+![gif01](/docs/gif01.gif)
+
 ![pic03](/docs/pic03.png)
 ![pic04](/docs/pic04.png)
 
