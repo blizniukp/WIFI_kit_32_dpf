@@ -211,7 +211,7 @@ static String config_get_page_body(configuration_t *cfg, measurement_t *m)
     body_page += "<label><input type='checkbox' " + String(m[i].enabled == true ? "checked" : "") + " name='" + key + "' id='" + key + "' value='" + key + "'>" + String(m[i].caption) + "</label><br>";
   }
 
-  body_page += "<input type='submit' value='Save'>";
+  body_page += "<input type='submit' value='Save'></form>";
   body_page += "<br><br><br>";
   body_page += "<form action='/remove'><input type='submit' value='Remove bonded devices'></form>";
   return body_page;
