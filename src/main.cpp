@@ -140,11 +140,11 @@ void printDeviceStatus()
   addToSerialLog(status);
 }
 
-void btSerialRead()
+void btSerialRead(int timeout = 1500)
 {
   char c = '\0';
   rxData[0] = '\0';
-  unsigned long btSerialReadTimeout = millis() + (MAX_BT_RESPONSE_TIME * 1000);
+  unsigned long btSerialReadTimeout = millis() + (MAX_BT_RESPONSE_TIME * 1000) + timeout;
 
   do
   {
@@ -176,13 +176,13 @@ void btSerialRead()
 #endif
 }
 
-void btSerialReadAndAddToLog()
+void btSerialReadAndAddToLog(int timeout = 1500)
 {
-  btSerialRead();
+  btSerialRead(timeout);
   addBtResponseToSerialLog(String(rxData));
 }
 
-void btSerialSendCommand(String command, int delayTime)
+void btSerialSendCommand(String command)
 {
   btSerial.flush();
   addBtCommandToSerialLog(command);
@@ -192,53 +192,52 @@ void btSerialSendCommand(String command, int delayTime)
   ws.textAll(command.c_str(), command.length());
   ws.textAll("\n");
 #endif
-  delay(delayTime);
 }
 
 void btSerialInit()
 {
   addToLog("Initialize OBD...");
-  btSerialSendCommand("ATZ\r", 500);
+  btSerialSendCommand("ATZ\r");
   btSerialReadAndAddToLog();
-  btSerialSendCommand("ATE0\r", 500);
-  btSerialReadAndAddToLog();
-
-  btSerialSendCommand("STI\r", 500);
-  btSerialReadAndAddToLog();
-  btSerialSendCommand("VTI\r", 500);
-  btSerialReadAndAddToLog();
-  btSerialSendCommand("ATD\r", 500);
-  btSerialReadAndAddToLog();
-  btSerialSendCommand("ATE0\r", 500);
+  btSerialSendCommand("ATE0\r");
   btSerialReadAndAddToLog();
 
-  btSerialSendCommand("ATSP0\r", 500);
+  btSerialSendCommand("STI\r");
   btSerialReadAndAddToLog();
-  btSerialSendCommand("ATE0\r", 500);
+  btSerialSendCommand("VTI\r");
   btSerialReadAndAddToLog();
-  btSerialSendCommand("ATH1\r", 700);
+  btSerialSendCommand("ATD\r");
   btSerialReadAndAddToLog();
-
-  btSerialSendCommand("ATM0\r", 500);
-  btSerialReadAndAddToLog();
-  btSerialSendCommand("ATS0\r", 500);
-  btSerialReadAndAddToLog();
-  btSerialSendCommand("ATAT1\r", 500);
-  btSerialReadAndAddToLog();
-  btSerialSendCommand("ATAL\r", 500);
-  btSerialReadAndAddToLog();
-  btSerialSendCommand("ATST64\r", 500);
+  btSerialSendCommand("ATE0\r");
   btSerialReadAndAddToLog();
 
-  btSerialSendCommand("0100\r", 5000); // SEARCHING...
+  btSerialSendCommand("ATSP0\r");
+  btSerialReadAndAddToLog();
+  btSerialSendCommand("ATE0\r");
+  btSerialReadAndAddToLog();
+  btSerialSendCommand("ATH1\r");
   btSerialReadAndAddToLog();
 
-  btSerialSendCommand("ATDPN\r", 500);
+  btSerialSendCommand("ATM0\r");
+  btSerialReadAndAddToLog();
+  btSerialSendCommand("ATS0\r");
+  btSerialReadAndAddToLog();
+  btSerialSendCommand("ATAT1\r");
+  btSerialReadAndAddToLog();
+  btSerialSendCommand("ATAL\r");
+  btSerialReadAndAddToLog();
+  btSerialSendCommand("ATST64\r");
   btSerialReadAndAddToLog();
 
-  btSerialSendCommand("ATSH7E0\r", 500);
+  btSerialSendCommand("0100\r"); // SEARCHING...
+  btSerialReadAndAddToLog(5000);
+
+  btSerialSendCommand("ATDPN\r");
   btSerialReadAndAddToLog();
-  btSerialSendCommand("10031\r", 500);
+
+  btSerialSendCommand("ATSH7E0\r");
+  btSerialReadAndAddToLog();
+  btSerialSendCommand("10031\r");
   btSerialReadAndAddToLog();
 }
 
@@ -299,7 +298,7 @@ bool calcFun_AB(char *command, float *val, float divider)
   *val = random(1, 100) / divider;
   return (bool)random(0, 2);
 #endif
-  btSerialSendCommand(command, 200);
+  btSerialSendCommand(command);
   btSerialReadAndAddToLog();
   if (isReadCanError())
   {
@@ -316,7 +315,7 @@ bool calcFun_ABCD(char *command, float *val, float divider)
   *val = random(1, 100) / divider;
   return (bool)random(0, 2);
 #endif
-  btSerialSendCommand(command, 200);
+  btSerialSendCommand(command);
   btSerialReadAndAddToLog();
   if (isReadCanError())
   {
@@ -333,7 +332,7 @@ bool calcFun_Temperature(char *command, float *val, float divider)
   *val = random(1, 100) / divider;
   return (bool)random(0, 2);
 #endif
-  btSerialSendCommand(command, 200);
+  btSerialSendCommand(command);
   btSerialReadAndAddToLog();
   if (isReadCanError())
   {
