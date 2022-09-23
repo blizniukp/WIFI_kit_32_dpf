@@ -97,6 +97,11 @@ void addResultToLog(bool result)
 bool connect()
 {
   bool result = false;
+  /*
+  Connecting by name does not always work well.
+  I had a problem with connecting to "OBDII" interface.
+  The get_name_from_eir function (in BluetoothSerial.cpp file) returns an incorrect device name length (peer_bdname_len field).
+  So, this is a workaround.*/
   if (connectByName == true)
   {
     addToLog("Connecting to: " + config.bt_if_name);
@@ -105,8 +110,23 @@ bool connect()
   }
   else
   {
-    uint8_t address[6] = {0x86, 0xdc, 0xa6, 0xab, 0xf7, 0xf1};
-    result = btSerial.connect(address);
+    BTScanResults *btDeviceList = btSerial.getScanResults();
+    if (btDeviceList->getCount() > 0)
+    {
+      BTAddress addr;
+      addToSerialLog("Found " + String(btDeviceList->getCount()) + " devices");
+      for (int i = 0; i < btDeviceList->getCount(); i++)
+      {
+        BTAdvertisedDevice *device = btDeviceList->getDevice(i);
+        addToSerialLog(" -- Address: " + String(device->getAddress().toString().c_str()));
+        addToSerialLog(" -- Name: " + String(device->getName().c_str()));
+        if (strcmp(config.bt_if_name.c_str(), device->getName().c_str()) == 0)
+        {
+          addToLog("Connecting by MAC address...");
+          result = btSerial.connect(device->getAddress());
+        }
+      }
+    }
     connectByName = true;
   }
 
@@ -386,21 +406,28 @@ void handleRoot(AsyncWebServerRequest *request)
 
 bool initBluetooth()
 {
+  if (btStarted())
+  {
+    btStop();
+  }
+
   if (!btStart())
   {
     addToSerialLog("Failed to initialize controller");
     return false;
   }
 
-  if (esp_bluedroid_init() != ESP_OK)
+  esp_err_t espErr = esp_bluedroid_init();
+  if (espErr != ESP_OK)
   {
-    addToSerialLog("Failed to initialize bluedroid");
+    addToSerialLog("Failed to initialize bluedroid: " + String(esp_err_to_name(espErr)));
     return false;
   }
 
+  espErr = esp_bluedroid_enable();
   if (esp_bluedroid_enable() != ESP_OK)
   {
-    addToSerialLog("Failed to enable bluedroid");
+    addToSerialLog("Failed to enable bluedroid: " + String(esp_err_to_name(espErr)));
     return false;
   }
   return true;
@@ -490,7 +517,7 @@ void deleteBondedDevices()
         addToSerialLog("Found bonded device # " + String(i) + " -> " + bda2str(pairedDeviceBtAddr[i], bdaStr, 18));
         if (REMOVE_BONDED_DEVICES)
         {
-          esp_err_t tError = esp_bt_gap_remove_bond_device(pairedDeviceBtAddr[i]);
+          tError = esp_bt_gap_remove_bond_device(pairedDeviceBtAddr[i]);
           if (ESP_OK == tError)
             addToSerialLog("Removed bonded device # " + String(i));
           else
@@ -572,7 +599,7 @@ void loop()
 
     if (!connected)
     {
-      delay(500);
+      delay(50);
       return;
     }
 
@@ -583,7 +610,7 @@ void loop()
 
   if (!connected)
   {
-    delay(500);
+    delay(50);
     return;
   }
 
