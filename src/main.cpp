@@ -8,8 +8,6 @@ AsyncWebServer server(80);
 AsyncWebSocket ws("/ws");
 #endif
 
-const int READ_BUFFER_SIZE = 128;
-
 bool connected = false;
 bool removeBondedDevices = false;
 int logLineNumber = 0;
@@ -58,11 +56,6 @@ void clearDisplay()
   logLineNumber = 0;
 }
 
-void addToSerialLog(String text)
-{
-  Serial.println(text);
-}
-
 void addToLog(String text)
 {
   if (logLineNumber >= MAX_LOG_LINES)
@@ -71,19 +64,19 @@ void addToLog(String text)
   }
 
   displayText(0, logLineNumber, text);
-  addToSerialLog(text);
+  Serial.println(text);
 
   logLineNumber += 10;
 }
 
 void addBtResponseToSerialLog(String text)
 {
-  addToSerialLog("< " + text);
+  Serial.printf("< %s\n", text);
 }
 
 void addBtCommandToSerialLog(String text)
 {
-  addToSerialLog("> " + text);
+  Serial.printf("> %s\n", text);
 }
 
 void addResultToLog(bool result)
@@ -114,15 +107,14 @@ bool connect()
     if (btDeviceList->getCount() > 0)
     {
       BTAddress addr;
-      addToSerialLog("Found " + String(btDeviceList->getCount()) + " devices");
+      Serial.printf("Found %d devices\n", btDeviceList->getCount());
       for (int i = 0; i < btDeviceList->getCount(); i++)
       {
         BTAdvertisedDevice *device = btDeviceList->getDevice(i);
-        addToSerialLog(" -- Address: " + String(device->getAddress().toString().c_str()));
-        addToSerialLog(" -- Name: " + String(device->getName().c_str()));
+        Serial.printf(" -- Address: %s, Name: %s\n", device->getAddress().toString().c_str(), String(device->getName().c_str()));
         if (strcmp(config.bt_if_name.c_str(), device->getName().c_str()) == 0)
         {
-          addToLog("Connecting by MAC address...");
+          addToLog("Connecting to: " + String(device->getAddress().toString().c_str()));
           result = btSerial.connect(device->getAddress());
         }
       }
@@ -135,9 +127,7 @@ bool connect()
 
 void printDeviceStatus()
 {
-  String status = "Connected: ";
-  status += connected == true ? "Y" : "N";
-  addToSerialLog(status);
+  Serial.printf("Connected: %s\n", (connected == true ? "Y" : "N"));
 }
 
 void btSerialRead(int timeout = 1500)
@@ -162,7 +152,7 @@ void btSerialRead(int timeout = 1500)
     }
     if (btSerialReadTimeout < millis())
     {
-      addToSerialLog("BtSerial read timeout error");
+      Serial.println("BtSerial read timeout error");
       break;
     }
   } while (c != '>');
@@ -196,7 +186,7 @@ void btSerialSendCommand(String command)
 
 void btSerialInit()
 {
-  addToLog("Initialize OBD...");
+  addToLog("OBD initialization...");
   btSerialSendCommand("ATZ\r");
   btSerialReadAndAddToLog();
   btSerialSendCommand("ATE0\r");
@@ -259,8 +249,6 @@ void btSerialCallback(esp_spp_cb_event_t event, esp_spp_cb_param_t *param)
 
 bool isReadCanError()
 {
-  printf("#isReadCanError: %s\n", rxData);
-
   char *ret = NULL;
   ret = strstr(rxData, "SEARCHING");
   if (ret)
@@ -364,8 +352,8 @@ void displayData(bool correctData, measurement_t *m)
 
   display->setFont(ArialMT_Plain_10);
   displayText(115, LAST_LINE - 5, (correctData == true ? "V" : "X"));
-  addToSerialLog("caption: " + String(m->caption) + ", isCorrectData: " + (correctData == true ? "Y" : "N") + ", value: " + String(m->value, 2));
-  addToSerialLog("========================");
+  Serial.printf("caption: %s, isCorrectData: %s, value: %.2f\n", m->caption, (correctData == true ? "Y" : "N"), m->value);
+  Serial.println("========================");
 }
 
 void drawProgressBar()
@@ -386,10 +374,10 @@ void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType 
   switch (type)
   {
   case WS_EVT_CONNECT:
-    addToSerialLog("WebSocket client " + String(client->id()) + " connected from " + client->remoteIP().toString());
+    Serial.printf("WebSocket client %u connected from %s\n", client->id(), client->remoteIP().toString().c_str());
     break;
   case WS_EVT_DISCONNECT:
-    addToSerialLog("WebSocket client " + String(client->id()) + " disconnected");
+    Serial.printf("WebSocket client %u disconnected\n", client->id());
     break;
   case WS_EVT_DATA:
   case WS_EVT_PONG:
@@ -412,21 +400,21 @@ bool initBluetooth()
 
   if (!btStart())
   {
-    addToSerialLog("Failed to initialize controller");
+    Serial.println("Failed to initialize controller");
     return false;
   }
 
   esp_err_t espErr = esp_bluedroid_init();
   if (espErr != ESP_OK)
   {
-    addToSerialLog("Failed to initialize bluedroid: " + String(esp_err_to_name(espErr)));
+    Serial.printf("Failed to initialize bluedroid: %s\n", esp_err_to_name(espErr));
     return false;
   }
 
   espErr = esp_bluedroid_enable();
   if (esp_bluedroid_enable() != ESP_OK)
   {
-    addToSerialLog("Failed to enable bluedroid: " + String(esp_err_to_name(espErr)));
+    Serial.printf("Failed to enable bluedroid: %s\n", esp_err_to_name(espErr));
     return false;
   }
   return true;
@@ -451,7 +439,7 @@ void handleRemove(AsyncWebServerRequest *request)
 
 void handleSave(AsyncWebServerRequest *request)
 {
-  addToSerialLog("Got handleSave");
+  Serial.println("Got handleSave");
   if (request->hasParam(CFG_BT_IF_NAME))
     config.bt_if_name = request->getParam(CFG_BT_IF_NAME)->value();
   if (request->hasParam(CFG_BT_IF_PIN))
@@ -470,10 +458,10 @@ void handleSave(AsyncWebServerRequest *request)
       measurements[i].enabled = false;
   }
 
-  addToSerialLog("Save configuration");
+  Serial.println("Save configuration");
   config_save(&config, measurements);
 
-  addToSerialLog("Restart device");
+  Serial.println("Restart device");
   ESP.restart();
 }
 
@@ -498,29 +486,29 @@ void deleteBondedDevices()
   int count = esp_bt_gap_get_bond_device_num();
   if (!count)
   {
-    addToSerialLog("No bonded device found.");
+    Serial.println("No bonded device found.");
   }
   else
   {
-    addToSerialLog("Bonded device count: " + String(count));
+    Serial.printf("Bonded device count: %d\n", count);
     if (PAIR_MAX_DEVICES < count)
     {
       count = PAIR_MAX_DEVICES;
-      addToSerialLog("Reset bonded device count: " + String(count));
+      Serial.printf("Reset bonded device count: %d\n", count);
     }
     esp_err_t tError = esp_bt_gap_get_bond_device_list(&count, pairedDeviceBtAddr);
     if (ESP_OK == tError)
     {
       for (int i = 0; i < count; i++)
       {
-        addToSerialLog("Found bonded device # " + String(i) + " -> " + bda2str(pairedDeviceBtAddr[i], bdaStr, 18));
+        Serial.printf("Found bonded device # %d -> %s\n", i, bda2str(pairedDeviceBtAddr[i], bdaStr, 18));
         if (REMOVE_BONDED_DEVICES)
         {
           tError = esp_bt_gap_remove_bond_device(pairedDeviceBtAddr[i]);
           if (ESP_OK == tError)
-            addToSerialLog("Removed bonded device # " + String(i));
+            Serial.printf("Removed bonded device # %d\n", i);
           else
-            addToSerialLog("Failed to remove bonded device # " + String(i));
+            Serial.printf("Failed to remove bonded device # %d\n", i);
         }
       }
     }
@@ -619,10 +607,9 @@ void loop()
   if (correctData && m->dataReadFunPtr)
     m->dataReadFunPtr(m->value);
 
-  addToSerialLog("Display data");
+  Serial.println("Display data");
   displayData(correctData, m);
 
-  addToSerialLog("Show progress bar");
   drawProgressBar();
   do
   {
