@@ -246,7 +246,7 @@ void btSerialCallback(esp_spp_cb_event_t event, esp_spp_cb_param_t *param)
   }
 }
 
-bool isReadCanError()
+bool isReadError()
 {
   char *ret = NULL;
   ret = strstr(rxData, "SEARCHING");
@@ -287,7 +287,7 @@ bool calcFun_AB(char *command, float *val, float divider)
 #endif
   btSerialSendCommand(command);
   btSerialReadAndAddToLog();
-  if (isReadCanError())
+  if (isReadError())
   {
     *val = -100.0f;
     return false;
@@ -304,7 +304,7 @@ bool calcFun_ABCD(char *command, float *val, float divider)
 #endif
   btSerialSendCommand(command);
   btSerialReadAndAddToLog();
-  if (isReadCanError())
+  if (isReadError())
   {
     *val = -100.0f;
     return false;
@@ -321,7 +321,7 @@ bool calcFun_Temperature(char *command, float *val, float divider)
 #endif
   btSerialSendCommand(command);
   btSerialReadAndAddToLog();
-  if (isReadCanError())
+  if (isReadError())
   {
     *val = -100.0f;
     return false;
