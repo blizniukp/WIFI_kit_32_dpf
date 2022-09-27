@@ -12,7 +12,6 @@ bool connected = false;
 bool removeBondedDevices = false;
 uint8_t logLineNumber = 0;
 char rxData[READ_BUFFER_SIZE];
-uint8_t rxIndex = 0;
 bool connectByName = true;
 uint8_t pairedDeviceBtAddr[PAIR_MAX_DEVICES][6];
 char bdaStr[18];
@@ -132,6 +131,7 @@ void printDeviceStatus()
 
 void btSerialRead(uint16_t timeout = 1500)
 {
+  uint8_t rxIndex = 0;
   char c = '\0';
   rxData[0] = '\0';
   unsigned long btSerialReadTimeout = millis() + (MAX_BT_RESPONSE_TIME * 1000) + timeout;
@@ -157,7 +157,6 @@ void btSerialRead(uint16_t timeout = 1500)
     }
   } while (c != '>');
   rxData[rxIndex++] = '\0';
-  rxIndex = 0;
 
 #ifdef ENABLE_WIFI
   ws.textAll("R:");
