@@ -45,7 +45,7 @@ void config_load(configuration_t *cfg, measurement_t m[])
   {
     Serial.printf("Namespace %s not found. Use default values.\n", CFG_NAMESPACE_MEASUREMENTS);
   }
-  for (int i = 0; true; i++)
+  for (uint8_t i = 0; true; i++)
   {
     if (m[i].id == 0 || m[i].calcFunPtr == NULL)
       break;
@@ -59,7 +59,7 @@ void config_load(configuration_t *cfg, measurement_t m[])
   {
     Serial.printf("Namespace %s not found. Use default values.\n", CFG_NAMESPACE_BUZZER);
   }
-  cfg->temperautre_threshold = pref.getFloat(CFG_BUZZER_THRESHOLD, CFG_BUZZER_THRESHOLD_DEFAULT);
+  cfg->temperature_threshold = pref.getFloat(CFG_BUZZER_THRESHOLD, CFG_BUZZER_THRESHOLD_DEFAULT);
   pref.end();
 
 #if DEBUG
@@ -72,7 +72,7 @@ void config_load(configuration_t *cfg, measurement_t m[])
   Serial.println("Display:");
   Serial.printf("%s: %s\n", CFG_DISPLAY_FLIP_SCREEN, (cfg->display_flip_screen == true ? "Yes" : "No"));
   Serial.println("Measurements:");
-  for (int i = 0; true; i++)
+  for (uint8_t i = 0; true; i++)
   {
     if (m[i].id == 0 || m[i].calcFunPtr == NULL)
       break;
@@ -80,7 +80,7 @@ void config_load(configuration_t *cfg, measurement_t m[])
     Serial.printf(": %s\n", m[i].enabled == true ? "true" : "false");
   }
   Serial.println("Buzzer:");
-  Serial.printf("%s: %s\n", CFG_BUZZER_THRESHOLD, String(cfg->temperautre_threshold).c_str());
+  Serial.printf("%s: %.2f\n", CFG_BUZZER_THRESHOLD, cfg->temperature_threshold);
 #endif
 }
 
@@ -121,7 +121,7 @@ bool config_save(configuration_t *cfg, measurement_t m[])
     Serial.printf("Can't open namespace: %s\n", CFG_NAMESPACE_MEASUREMENTS);
     return false;
   }
-  for (int i = 0; true; i++)
+  for (uint8_t i = 0; true; i++)
   {
     if (m[i].id == 0 || m[i].calcFunPtr == NULL)
       break;
@@ -136,7 +136,7 @@ bool config_save(configuration_t *cfg, measurement_t m[])
     Serial.printf("Can't open namespace: %s\n", CFG_NAMESPACE_BUZZER);
     return false;
   }
-  pref.putFloat(CFG_BUZZER_THRESHOLD, cfg->temperautre_threshold);
+  pref.putFloat(CFG_BUZZER_THRESHOLD, cfg->temperature_threshold);
   pref.end();
 
   return true;
@@ -199,11 +199,11 @@ static String config_get_page_body(configuration_t *cfg, measurement_t *m)
   body_page += "<label for='bt_pin'>Pin</label><br>";
   body_page += "<input type='text' id='bt_pin' name='bt_pin' value='" + cfg->bt_if_pin + "'><br>";
   body_page += "<label for='buzzer_t'>Temperature threshold to activates the buzzer alarm.</label><br>";
-  body_page += "<input type='text' id='buzzer_t' name='buzzer_t' value='" + String(cfg->temperautre_threshold) + "'><br>";
+  body_page += "<input type='text' id='buzzer_t' name='buzzer_t' value='" + String(cfg->temperature_threshold) + "'><br>";
   body_page += "<label for='d_flip'>Flip screen vertically</label><br>";
   body_page += "<input type='checkbox' id='d_flip' name='d_flip' value='d_flip' " + flip_screen + " ><br><br>";
 
-  for (int i = 0; true; i++)
+  for (uint8_t i = 0; true; i++)
   {
     if (m[i].id == 0 || m[i].calcFunPtr == NULL)
       break;

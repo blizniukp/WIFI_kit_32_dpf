@@ -10,7 +10,7 @@ AsyncWebSocket ws("/ws");
 
 bool connected = false;
 bool removeBondedDevices = false;
-int logLineNumber = 0;
+uint8_t logLineNumber = 0;
 char rxData[READ_BUFFER_SIZE];
 uint8_t rxIndex = 0;
 bool connectByName = true;
@@ -33,7 +33,7 @@ measurement_t measurements[] = {
     {0, "", "", "", 0.0f, NULL, 0.0f, false},
 };
 
-int measurementIndex = 0;
+uint8_t measurementIndex = 0;
 
 configuration_t config;
 
@@ -44,7 +44,7 @@ void initDisplay()
   display->setFont(ArialMT_Plain_10);
 }
 
-void displayText(int x, int y, String text)
+void displayText(uint8_t x, uint8_t y, String text)
 {
   display->drawString(x, y, text);
   display->display();
@@ -108,7 +108,7 @@ bool connect()
     {
       BTAddress addr;
       Serial.printf("Found %d devices\n", btDeviceList->getCount());
-      for (int i = 0; i < btDeviceList->getCount(); i++)
+      for (uint8_t i = 0; i < btDeviceList->getCount(); i++)
       {
         BTAdvertisedDevice *device = btDeviceList->getDevice(i);
         Serial.printf(" -- Address: %s, Name: %s\n", device->getAddress().toString().c_str(), String(device->getName().c_str()));
@@ -130,7 +130,7 @@ void printDeviceStatus()
   Serial.printf("Connected: %s\n", (connected == true ? "Y" : "N"));
 }
 
-void btSerialRead(int timeout = 1500)
+void btSerialRead(uint16_t timeout = 1500)
 {
   char c = '\0';
   rxData[0] = '\0';
@@ -166,7 +166,7 @@ void btSerialRead(int timeout = 1500)
 #endif
 }
 
-void btSerialReadAndAddToLog(int timeout = 1500)
+void btSerialReadAndAddToLog(uint16_t timeout = 1500)
 {
   btSerialRead(timeout);
   addBtResponseToSerialLog(String(rxData));
@@ -272,7 +272,7 @@ bool isReadCanError()
   return false;
 }
 
-int getByteFromData(int index)
+int32_t getByteFromData(uint8_t index)
 {
   char buffer[3] = {0, 0, 0};
   buffer[0] = rxData[index];
@@ -338,7 +338,7 @@ void dataReadFun_Temperature(float value)
 
 void displayData(bool correctData, measurement_t *m)
 {
-  int xpos = 0, ypos = 0;
+  uint8_t xpos = 0, ypos = 0;
 
   clearDisplay();
   display->setFont(ArialMT_Plain_16);
@@ -361,7 +361,7 @@ void drawProgressBar()
   displayText(0, LAST_LINE, "[");
   displayText(100, LAST_LINE, "]");
 
-  for (int i = 1; i < 100; i++)
+  for (uint8_t i = 1; i < 100; i++)
   {
     displayText(i, LAST_LINE - 3, ".");
     delay(50);
@@ -447,7 +447,7 @@ void handleSave(AsyncWebServerRequest *request)
   if (request->hasParam(CFG_DISPLAY_FLIP_SCREEN))
     config.display_flip_screen = request->getParam(CFG_DISPLAY_FLIP_SCREEN)->value() == CFG_DISPLAY_FLIP_SCREEN ? true : false;
 
-  for (int i = 0; true; i++)
+  for (uint8_t i = 0; true; i++)
   {
     if (measurements[i].id == 0 || measurements[i].calcFunPtr == NULL)
       break;
@@ -483,7 +483,7 @@ void initWebserver()
 void deleteBondedDevices()
 {
   initBluetooth();
-  int count = esp_bt_gap_get_bond_device_num();
+  int32_t count = esp_bt_gap_get_bond_device_num();
   if (!count)
   {
     Serial.println("No bonded device found.");
@@ -499,7 +499,7 @@ void deleteBondedDevices()
     esp_err_t tError = esp_bt_gap_get_bond_device_list(&count, pairedDeviceBtAddr);
     if (ESP_OK == tError)
     {
-      for (int i = 0; i < count; i++)
+      for (int16_t i = 0; i < count; i++)
       {
         Serial.printf("Found bonded device # %d -> %s\n", i, bda2str(pairedDeviceBtAddr[i], bdaStr, 18));
         if (REMOVE_BONDED_DEVICES)
@@ -534,7 +534,7 @@ void setup()
 
   addToLog("Enable buzzer");
   buzzer_init(BUZZER_PIN);
-  buzzer_set_threshold(config.temperautre_threshold);
+  buzzer_set_threshold(config.temperature_threshold);
 
   addToLog("Setup bluetooth...");
   result = btSerial.begin(CFG_DEVICE_NAME_DEFAULT, true);

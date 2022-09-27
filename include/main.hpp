@@ -30,6 +30,6 @@
 #define MAX_LOG_LINES (60)
 #define LAST_LINE (56)
 #define MAX_BT_RESPONSE_TIME (10) /*10 seconds*/
-#define PAIR_MAX_DEVICES 20
-#define REMOVE_BONDED_DEVICES 1
+#define PAIR_MAX_DEVICES (20)
+#define REMOVE_BONDED_DEVICES (1)
 #define READ_BUFFER_SIZE (128)

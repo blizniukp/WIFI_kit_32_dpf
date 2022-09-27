@@ -42,7 +42,7 @@ typedef struct configuration_def
 
     bool display_flip_screen; /* Flip the screen */
 
-    float temperautre_threshold; /*The temperature threshold that activates the buzzer alarm.*/
+    float temperature_threshold; /*The temperature threshold that activates the buzzer alarm.*/
 } configuration_t;
 
 void config_init();

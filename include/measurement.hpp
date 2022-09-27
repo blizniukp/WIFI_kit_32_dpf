@@ -9,8 +9,8 @@
 
 typedef struct measurement_def
 {
-    byte id; /*Index*/
-    char caption[MAX_CAPTION_LENGTH];
+    uint8_t id;                                                   /*Index*/
+    char caption[MAX_CAPTION_LENGTH];                             /*Caption*/
     char command[MAX_COMMAND_LENGTH];                             /*Command to send*/
     char unit[MAX_UNIT_LENGTH];                                   /*Unit [g,km,min]*/
     float value;                                                  /*Calculated value*/
