@@ -107,7 +107,7 @@ bool connect()
     {
       BTAddress addr;
       Serial.printf("Found %d devices\n", btDeviceList->getCount());
-      for (uint8_t i = 0; i < btDeviceList->getCount(); i++)
+      for (uint8_t deviceIdx = 0; deviceIdx < btDeviceList->getCount(); deviceIdx++)
       {
         BTAdvertisedDevice *device = btDeviceList->getDevice(i);
         Serial.printf(" -- Address: %s, Name: %s\n", device->getAddress().toString().c_str(), String(device->getName().c_str()));
@@ -354,9 +354,9 @@ void drawProgressBar()
   displayText(0, LAST_LINE, "[");
   displayText(100, LAST_LINE, "]");
 
-  for (uint8_t i = 1; i < 100; i++)
+  for (uint8_t columnIdx = 1; columnIdx < 100; columnIdx++)
   {
-    displayText(i, LAST_LINE - 3, ".");
+    displayText(columnIdx, LAST_LINE - 3, ".");
     delay(50);
   }
 }
@@ -440,15 +440,15 @@ void handleSave(AsyncWebServerRequest *request)
   if (request->hasParam(CFG_DISPLAY_FLIP_SCREEN))
     config.display_flip_screen = request->getParam(CFG_DISPLAY_FLIP_SCREEN)->value() == CFG_DISPLAY_FLIP_SCREEN ? true : false;
 
-  for (uint8_t i = 0; true; i++)
+  for (uint8_t msmIdx = 0; true; msmIdx++)
   {
-    if (measurements[i].id == 0 || measurements[i].calcFunPtr == NULL)
+    if (measurements[msmIdx].id == 0 || measurements[msmIdx].calcFunPtr == NULL)
       break;
-    String pname = "m_" + String(measurements[i].id);
+    String pname = "m_" + String(measurements[msmIdx].id);
     if (request->hasParam(pname))
-      measurements[i].enabled = true;
+      measurements[msmIdx].enabled = true;
     else
-      measurements[i].enabled = false;
+      measurements[msmIdx].enabled = false;
   }
 
   Serial.println("Save configuration");
@@ -492,16 +492,16 @@ void deleteBondedDevices()
     esp_err_t tError = esp_bt_gap_get_bond_device_list(&count, pairedDeviceBtAddr);
     if (ESP_OK == tError)
     {
-      for (int16_t i = 0; i < count; i++)
+      for (int16_t deviceIdx = 0; deviceIdx < count; deviceIdx++)
       {
-        Serial.printf("Found bonded device # %d -> %s\n", i, bda2str(pairedDeviceBtAddr[i], bdaStr, 18));
+        Serial.printf("Found bonded device # %d -> %s\n", deviceIdx, bda2str(pairedDeviceBtAddr[deviceIdx], bdaStr, 18));
         if (REMOVE_BONDED_DEVICES)
         {
-          tError = esp_bt_gap_remove_bond_device(pairedDeviceBtAddr[i]);
+          tError = esp_bt_gap_remove_bond_device(pairedDeviceBtAddr[deviceIdx]);
           if (ESP_OK == tError)
-            Serial.printf("Removed bonded device # %d\n", i);
+            Serial.printf("Removed bonded device # %d\n", deviceIdx);
           else
-            Serial.printf("Failed to remove bonded device # %d\n", i);
+            Serial.printf("Failed to remove bonded device # %d\n", deviceIdx);
         }
       }
     }

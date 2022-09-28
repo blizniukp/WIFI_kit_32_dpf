@@ -45,12 +45,12 @@ void config_load(configuration_t *cfg, measurement_t m[])
   {
     Serial.printf("Namespace %s not found. Use default values.\n", CFG_NAMESPACE_MEASUREMENTS);
   }
-  for (uint8_t i = 0; true; i++)
+  for (uint8_t msmIdx = 0; true; msmIdx++)
   {
-    if (m[i].id == 0 || m[i].calcFunPtr == NULL)
+    if (m[msmIdx].id == 0 || m[msmIdx].calcFunPtr == NULL)
       break;
-    String key = "m_" + String(m[i].id);
-    m[i].enabled = pref.getBool(key.c_str(), true);
+    String key = "m_" + String(m[msmIdx].id);
+    m[msmIdx].enabled = pref.getBool(key.c_str(), true);
   }
   pref.end();
 
@@ -72,12 +72,12 @@ void config_load(configuration_t *cfg, measurement_t m[])
   Serial.println("Display:");
   Serial.printf("%s: %s\n", CFG_DISPLAY_FLIP_SCREEN, (cfg->display_flip_screen == true ? "Yes" : "No"));
   Serial.println("Measurements:");
-  for (uint8_t i = 0; true; i++)
+  for (uint8_t msmIdx = 0; true; msmIdx++)
   {
-    if (m[i].id == 0 || m[i].calcFunPtr == NULL)
+    if (m[msmIdx].id == 0 || m[msmIdx].calcFunPtr == NULL)
       break;
-    Serial.print("m_" + String(m[i].id));
-    Serial.printf(": %s\n", m[i].enabled == true ? "true" : "false");
+    Serial.print("m_" + String(m[msmIdx].id));
+    Serial.printf(": %s\n", m[msmIdx].enabled == true ? "true" : "false");
   }
   Serial.println("Buzzer:");
   Serial.printf("%s: %.2f\n", CFG_BUZZER_THRESHOLD, cfg->temperature_threshold);
@@ -121,12 +121,12 @@ bool config_save(configuration_t *cfg, measurement_t m[])
     Serial.printf("Can't open namespace: %s\n", CFG_NAMESPACE_MEASUREMENTS);
     return false;
   }
-  for (uint8_t i = 0; true; i++)
+  for (uint8_t msmIdx = 0; true; msmIdx++)
   {
-    if (m[i].id == 0 || m[i].calcFunPtr == NULL)
+    if (m[msmIdx].id == 0 || m[msmIdx].calcFunPtr == NULL)
       break;
-    String key = "m_" + String(m[i].id);
-    pref.putBool(key.c_str(), m[i].enabled);
+    String key = "m_" + String(msmIdx].id);
+    pref.putBool(key.c_str(), m[msmIdx].enabled);
   }
   pref.end();
 
@@ -203,12 +203,12 @@ static String config_get_page_body(configuration_t *cfg, measurement_t *m)
   body_page += "<label for='d_flip'>Flip screen vertically</label><br>";
   body_page += "<input type='checkbox' id='d_flip' name='d_flip' value='d_flip' " + flip_screen + " ><br><br>";
 
-  for (uint8_t i = 0; true; i++)
+  for (uint8_t msmIdx = 0; true; msmIdx++)
   {
-    if (m[i].id == 0 || m[i].calcFunPtr == NULL)
+    if (m[msmIdx].id == 0 || m[msmIdx].calcFunPtr == NULL)
       break;
-    String key = "m_" + String(m[i].id);
-    body_page += "<label><input type='checkbox' " + String(m[i].enabled == true ? "checked" : "") + " name='" + key + "' id='" + key + "' value='" + key + "'>" + String(m[i].caption) + "</label><br>";
+    String key = "m_" + String(m[msmIdx].id);
+    body_page += "<label><input type='checkbox' " + String(m[msmIdx].enabled == true ? "checked" : "") + " name='" + key + "' id='" + key + "' value='" + key + "'>" + String(m[msmIdx].caption) + "</label><br>";
   }
 
   body_page += "<input type='submit' value='Save'></form>";
