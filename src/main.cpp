@@ -94,7 +94,7 @@ bool connect()
   I had a problem with connecting to "OBDII" interface.
   The get_name_from_eir function (in BluetoothSerial.cpp file) returns an incorrect device name length (peer_bdname_len field).
   So, this is a workaround.*/
-  if (connectByName == true)
+  if (connectByName)
   {
     addToLog("Connecting to: " + config.bt_if_name);
     result = btSerial.connect(config.bt_if_name);
@@ -109,9 +109,9 @@ bool connect()
       Serial.printf("Found %d devices\n", btDeviceList->getCount());
       for (uint8_t deviceIdx = 0; deviceIdx < btDeviceList->getCount(); deviceIdx++)
       {
-        BTAdvertisedDevice *device = btDeviceList->getDevice(i);
+        BTAdvertisedDevice *device = btDeviceList->getDevice(deviceIdx);
         Serial.printf(" -- Address: %s, Name: %s\n", device->getAddress().toString().c_str(), String(device->getName().c_str()));
-        if (strcmp(config.bt_if_name.c_str(), device->getName().c_str()) == 0)
+        if (device->getName().compare(config.bt_if_name.c_str()) == 0)
         {
           addToLog("Connecting to: " + String(device->getAddress().toString().c_str()));
           result = btSerial.connect(device->getAddress());
@@ -275,8 +275,8 @@ int32_t getByteFromData(uint8_t index)
 {
   char buffer[3] = {0, 0, 0};
   buffer[0] = rxData[index];
-  buffer[0 + 1] = rxData[index + 1];
-  return (strtol(&buffer[0], NULL, 16));
+  buffer[1] = rxData[index + 1];
+  return (strtol(buffer, NULL, 16));
 }
 
 bool calcFun_AB(float *val, float divider)
@@ -489,16 +489,16 @@ void deleteBondedDevices()
       count = PAIR_MAX_DEVICES;
       Serial.printf("Reset bonded device count: %d\n", count);
     }
-    esp_err_t tError = esp_bt_gap_get_bond_device_list(&count, pairedDeviceBtAddr);
-    if (ESP_OK == tError)
+    esp_err_t espErr = esp_bt_gap_get_bond_device_list(&count, pairedDeviceBtAddr);
+    if (espErr == ESP_OK)
     {
       for (int16_t deviceIdx = 0; deviceIdx < count; deviceIdx++)
       {
         Serial.printf("Found bonded device # %d -> %s\n", deviceIdx, bda2str(pairedDeviceBtAddr[deviceIdx], bdaStr, 18));
         if (REMOVE_BONDED_DEVICES)
         {
-          tError = esp_bt_gap_remove_bond_device(pairedDeviceBtAddr[deviceIdx]);
-          if (ESP_OK == tError)
+          espErr = esp_bt_gap_remove_bond_device(pairedDeviceBtAddr[deviceIdx]);
+          if (espErr == ESP_OK)
             Serial.printf("Removed bonded device # %d\n", deviceIdx);
           else
             Serial.printf("Failed to remove bonded device # %d\n", deviceIdx);

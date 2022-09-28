@@ -125,7 +125,7 @@ bool config_save(configuration_t *cfg, measurement_t m[])
   {
     if (m[msmIdx].id == 0 || m[msmIdx].calcFunPtr == NULL)
       break;
-    String key = "m_" + String(msmIdx].id);
+    String key = "m_" + String(m[msmIdx].id);
     pref.putBool(key.c_str(), m[msmIdx].enabled);
   }
   pref.end();
