@@ -16,9 +16,9 @@ bool connectByName = true;
 uint8_t pairedDeviceBtAddr[PAIR_MAX_DEVICES][6];
 char bdaStr[18];
 
-bool calcFun_AB(char *command, float *val, float divider);
-bool calcFun_ABCD(char *command, float *val, float divider);
-bool calcFun_Temperature(char *command, float *val, float divider);
+bool calcFun_AB(float *val, float divider);
+bool calcFun_ABCD(float *val, float divider);
+bool calcFun_Temperature(float *val, float divider);
 void dataReadFun_Temperature(float value);
 
 measurement_t measurements[] = {
@@ -279,14 +279,12 @@ int32_t getByteFromData(uint8_t index)
   return (strtol(&buffer[0], NULL, 16));
 }
 
-bool calcFun_AB(char *command, float *val, float divider)
+bool calcFun_AB(float *val, float divider)
 {
 #ifdef RANDOM_DATA
   *val = random(1, 100) / divider;
   return (bool)random(0, 2);
 #endif
-  btSerialSendCommand(command);
-  btSerialReadAndAddToLog();
   if (isReadError())
   {
     *val = -100.0f;
@@ -296,14 +294,12 @@ bool calcFun_AB(char *command, float *val, float divider)
   return true;
 }
 
-bool calcFun_ABCD(char *command, float *val, float divider)
+bool calcFun_ABCD(float *val, float divider)
 {
 #ifdef RANDOM_DATA
   *val = random(1, 100) / divider;
   return (bool)random(0, 2);
 #endif
-  btSerialSendCommand(command);
-  btSerialReadAndAddToLog();
   if (isReadError())
   {
     *val = -100.0f;
@@ -313,14 +309,12 @@ bool calcFun_ABCD(char *command, float *val, float divider)
   return true;
 }
 
-bool calcFun_Temperature(char *command, float *val, float divider)
+bool calcFun_Temperature(float *val, float divider)
 {
 #ifdef RANDOM_DATA
   *val = random(1, 100) / divider;
   return (bool)random(0, 2);
 #endif
-  btSerialSendCommand(command);
-  btSerialReadAndAddToLog();
   if (isReadError())
   {
     *val = -100.0f;
@@ -601,8 +595,9 @@ void loop()
   }
 
   measurement_t *m = &measurements[measurementIndex];
-  bool correctData = m->calcFunPtr(m->command, &m->value, m->divider);
-
+  btSerialSendCommand(m->command);
+  btSerialReadAndAddToLog();
+  bool correctData = m->calcFunPtr(&m->value, m->divider);
   if (correctData && m->dataReadFunPtr)
     m->dataReadFunPtr(m->value);
 

@@ -1,3 +1,6 @@
+#ifndef MAIN_HPP
+#define MAIN_HPP
+
 #include <Arduino.h>
 #include <Wire.h>
 #include <BluetoothSerial.h>
@@ -33,3 +36,4 @@
 #define PAIR_MAX_DEVICES (20)
 #define REMOVE_BONDED_DEVICES (1)
 #define READ_BUFFER_SIZE (128)
+#endif
