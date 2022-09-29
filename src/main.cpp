@@ -11,14 +11,11 @@ AsyncWebSocket ws("/ws");
 bool connected = false;
 bool removeBondedDevices = false;
 uint8_t logLineNumber = 0;
-char rxData[READ_BUFFER_SIZE];
 bool connectByName = true;
-uint8_t pairedDeviceBtAddr[PAIR_MAX_DEVICES][6];
-char bdaStr[18];
 
-bool calcFun_AB(float *val, float divider);
-bool calcFun_ABCD(float *val, float divider);
-bool calcFun_Temperature(float *val, float divider);
+bool calcFun_AB(char *data, size_t data_len, float *val, float divider);
+bool calcFun_ABCD(char *data, size_t data_len, float *val, float divider);
+bool calcFun_Temperature(char *data, size_t data_len, float *val, float divider);
 void dataReadFun_Temperature(float value);
 
 measurement_t measurements[] = {
@@ -70,12 +67,12 @@ void addToLog(String text)
 
 void addBtResponseToSerialLog(String text)
 {
-  Serial.printf("< %s\n", text);
+  Serial.printf("<[%d] %s\n", text.length(), text);
 }
 
 void addBtCommandToSerialLog(String text)
 {
-  Serial.printf("> %s\n", text);
+  Serial.printf(">[%d] %s\n", text.length(), text);
 }
 
 void addResultToLog(bool result)
@@ -129,11 +126,11 @@ void printDeviceStatus()
   Serial.printf("Connected: %s\n", (connected == true ? "Y" : "N"));
 }
 
-void btSerialRead(uint16_t timeout = 1500)
+size_t btSerialRead(char *buffer, uint16_t timeout = 1500)
 {
-  uint8_t rxIndex = 0;
+  size_t data_len = 0;
   char c = '\0';
-  rxData[0] = '\0';
+  buffer[0] = '\0';
   unsigned long btSerialReadTimeout = millis() + (MAX_BT_RESPONSE_TIME * 1000) + timeout;
 
   do
@@ -143,11 +140,11 @@ void btSerialRead(uint16_t timeout = 1500)
       c = btSerial.read();
       if ((c != '>') && (c != '\r') && (c != '\n'))
       {
-        rxData[rxIndex++] = c;
+        buffer[data_len++] = c;
       }
-      if (rxIndex > READ_BUFFER_SIZE)
+      if (data_len > READ_BUFFER_SIZE)
       {
-        rxIndex = 0;
+        data_len = 0;
       }
     }
     if (btSerialReadTimeout < millis())
@@ -156,19 +153,21 @@ void btSerialRead(uint16_t timeout = 1500)
       break;
     }
   } while (c != '>');
-  rxData[rxIndex++] = '\0';
+  buffer[data_len + 1] = '\0';
 
 #ifdef ENABLE_WIFI
   ws.textAll("R:");
-  ws.textAll(rxData);
+  ws.textAll(buffer);
   ws.textAll("\n");
 #endif
+  return data_len;
 }
 
-void btSerialReadAndAddToLog(uint16_t timeout = 1500)
+size_t btSerialReadAndAddToLog(char *buffer, uint16_t timeout = 1500)
 {
-  btSerialRead(timeout);
-  addBtResponseToSerialLog(String(rxData));
+  size_t rxLen = btSerialRead(buffer, timeout);
+  addBtResponseToSerialLog(String(buffer));
+  return rxLen;
 }
 
 void btSerialSendCommand(String command)
@@ -183,51 +182,51 @@ void btSerialSendCommand(String command)
 #endif
 }
 
-void btSerialInit()
+void btSerialInit(char *buffer)
 {
   addToLog("OBD initialization...");
   btSerialSendCommand("ATZ\r");
-  btSerialReadAndAddToLog();
+  btSerialReadAndAddToLog(buffer);
   btSerialSendCommand("ATE0\r");
-  btSerialReadAndAddToLog();
+  btSerialReadAndAddToLog(buffer);
 
   btSerialSendCommand("STI\r");
-  btSerialReadAndAddToLog();
+  btSerialReadAndAddToLog(buffer);
   btSerialSendCommand("VTI\r");
-  btSerialReadAndAddToLog();
+  btSerialReadAndAddToLog(buffer);
   btSerialSendCommand("ATD\r");
-  btSerialReadAndAddToLog();
+  btSerialReadAndAddToLog(buffer);
   btSerialSendCommand("ATE0\r");
-  btSerialReadAndAddToLog();
+  btSerialReadAndAddToLog(buffer);
 
   btSerialSendCommand("ATSP0\r");
-  btSerialReadAndAddToLog();
+  btSerialReadAndAddToLog(buffer);
   btSerialSendCommand("ATE0\r");
-  btSerialReadAndAddToLog();
+  btSerialReadAndAddToLog(buffer);
   btSerialSendCommand("ATH1\r");
-  btSerialReadAndAddToLog();
+  btSerialReadAndAddToLog(buffer);
 
   btSerialSendCommand("ATM0\r");
-  btSerialReadAndAddToLog();
+  btSerialReadAndAddToLog(buffer);
   btSerialSendCommand("ATS0\r");
-  btSerialReadAndAddToLog();
+  btSerialReadAndAddToLog(buffer);
   btSerialSendCommand("ATAT1\r");
-  btSerialReadAndAddToLog();
+  btSerialReadAndAddToLog(buffer);
   btSerialSendCommand("ATAL\r");
-  btSerialReadAndAddToLog();
+  btSerialReadAndAddToLog(buffer);
   btSerialSendCommand("ATST64\r");
-  btSerialReadAndAddToLog();
+  btSerialReadAndAddToLog(buffer);
 
   btSerialSendCommand("0100\r"); // SEARCHING...
-  btSerialReadAndAddToLog(5000);
+  btSerialReadAndAddToLog(buffer, 5000);
 
   btSerialSendCommand("ATDPN\r");
-  btSerialReadAndAddToLog();
+  btSerialReadAndAddToLog(buffer);
 
   btSerialSendCommand("ATSH7E0\r");
-  btSerialReadAndAddToLog();
+  btSerialReadAndAddToLog(buffer);
   btSerialSendCommand("10031\r");
-  btSerialReadAndAddToLog();
+  btSerialReadAndAddToLog(buffer);
 }
 
 void btSerialCallback(esp_spp_cb_event_t event, esp_spp_cb_param_t *param)
@@ -246,81 +245,81 @@ void btSerialCallback(esp_spp_cb_event_t event, esp_spp_cb_param_t *param)
   }
 }
 
-bool isReadError()
+bool isCanError(char *response)
 {
   char *ret = NULL;
-  ret = strstr(rxData, "SEARCHING");
+  ret = strstr(response, "SEARCHING");
   if (ret)
     return true;
 
-  ret = strstr(rxData, "CAN ERROR");
+  ret = strstr(response, "CAN ERROR");
   if (ret)
     return true;
 
-  ret = strstr(rxData, "STOPPED");
+  ret = strstr(response, "STOPPED");
   if (ret)
     return true;
 
-  ret = strstr(rxData, "UNABLE");
+  ret = strstr(response, "UNABLE");
   if (ret)
     return true;
 
-  if (rxData[0] == '\0')
+  if (response[0] == '\0')
     return true;
 
   return false;
 }
 
-int32_t getByteFromData(uint8_t index)
+int32_t getByteFromData(char *data, size_t data_len, uint8_t index)
 {
   char buffer[3] = {0, 0, 0};
-  buffer[0] = rxData[index];
-  buffer[1] = rxData[index + 1];
+  buffer[0] = data[index];
+  buffer[1] = data[index + 1];
   return (strtol(buffer, NULL, 16));
 }
 
-bool calcFun_AB(float *val, float divider)
+bool calcFun_AB(char *data, size_t data_len, float *val, float divider)
 {
 #ifdef RANDOM_DATA
   *val = random(1, 100) / divider;
   return (bool)random(0, 2);
 #endif
-  if (isReadError())
+  if (isCanError(data))
   {
     *val = -100.0f;
     return false;
   }
-  *val = (((getByteFromData(11) * 256) + (getByteFromData(13))) / divider);
+  *val = (((getByteFromData(data, data_len, 11) * 256) + (getByteFromData(data, data_len, 13))) / divider);
   return true;
 }
 
-bool calcFun_ABCD(float *val, float divider)
+bool calcFun_ABCD(char *data, size_t data_len, float *val, float divider)
 {
 #ifdef RANDOM_DATA
   *val = random(1, 100) / divider;
   return (bool)random(0, 2);
 #endif
-  if (isReadError())
+  if (isCanError(data))
   {
     *val = -100.0f;
     return false;
   }
-  *val = (((getByteFromData(11) * 16777216) + (getByteFromData(13) * 65536) + (getByteFromData(15) * 256) + (getByteFromData(17))) / divider);
+  *val = (((getByteFromData(data, data_len, 11) * 16777216) + (getByteFromData(data, data_len, 13) * 65536) + (getByteFromData(data, data_len, 15) * 256) + (getByteFromData(data, data_len, 17))) / divider);
   return true;
 }
 
-bool calcFun_Temperature(float *val, float divider)
+bool calcFun_Temperature(char *data, size_t data_len, float *val, float divider)
 {
 #ifdef RANDOM_DATA
   *val = random(1, 100) / divider;
   return (bool)random(0, 2);
 #endif
-  if (isReadError())
+  if (isCanError(data))
   {
     *val = -100.0f;
     return false;
   }
-  *val = ((((getByteFromData(11) * 256) + (getByteFromData(13))) - 2731) / divider);
+  *val = ((((getByteFromData(data, data_len, 11) * 256) + (getByteFromData(data, data_len, 13))) - 2731) / divider);
   return true;
 }
 
@@ -475,6 +474,9 @@ void initWebserver()
 
 void deleteBondedDevices()
 {
+  char bdaStr[18];
+  uint8_t pairedDeviceBtAddr[PAIR_MAX_DEVICES][6];
+
   initBluetooth();
   int32_t count = esp_bt_gap_get_bond_device_num();
   if (!count)
@@ -558,6 +560,9 @@ void setup()
 
 void loop()
 {
+  char rxData[READ_BUFFER_SIZE];
+  size_t rxLen = 0;
+
 #ifdef ENABLE_WIFI
   ws.cleanupClients();
 
@@ -584,7 +589,7 @@ void loop()
     }
 
     addToLog("Connected");
-    btSerialInit();
+    btSerialInit(rxData);
     measurementIndex = 0;
   }
 
@@ -596,8 +601,8 @@ void loop()
 
   measurement_t *m = &measurements[measurementIndex];
   btSerialSendCommand(m->command);
-  btSerialReadAndAddToLog();
-  bool correctData = m->calcFunPtr(&m->value, m->divider);
+  rxLen = btSerialReadAndAddToLog(rxData);
+  bool correctData = m->calcFunPtr(rxData, rxLen, &m->value, m->divider);
   if (correctData && m->dataReadFunPtr)
     m->dataReadFunPtr(m->value);
 
