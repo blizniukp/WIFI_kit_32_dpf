@@ -1,5 +1,12 @@
 #include "main.hpp"
 
+static const uint8_t max_log_lines = 60;
+static const uint8_t last_line = 56;
+static const uint8_t max_bt_response_time = 10; /*10 seconds*/
+static const uint8_t max_bt_paired_devices = 20;
+static const uint8_t remove_bonded_devices = 1;
+static const uint8_t rx_buffer_size = 128;
+
 BluetoothSerial btSerial;
 SSD1306Wire *display;
 
@@ -54,7 +61,7 @@ void clearDisplay()
 
 void addToLog(String text)
 {
-  if (logLineNumber >= MAX_LOG_LINES)
+  if (logLineNumber >= max_log_lines)
   {
     clearDisplay();
   }
@@ -131,7 +138,7 @@ size_t btSerialRead(char *buffer, uint16_t timeout = 1500)
   size_t data_len = 0;
   char c = '\0';
   buffer[0] = '\0';
-  unsigned long btSerialReadTimeout = millis() + (MAX_BT_RESPONSE_TIME * 1000) + timeout;
+  unsigned long btSerialReadTimeout = millis() + (max_bt_response_time * 1000) + timeout;
 
   do
   {
@@ -142,7 +149,7 @@ size_t btSerialRead(char *buffer, uint16_t timeout = 1500)
       {
         buffer[data_len++] = c;
       }
-      if (data_len > READ_BUFFER_SIZE)
+      if (data_len > rx_buffer_size)
       {
         data_len = 0;
       }
@@ -343,19 +350,19 @@ void displayData(bool correctData, measurement_t *m)
     displayText(xpos, ypos + 25, "???");
 
   display->setFont(ArialMT_Plain_10);
-  displayText(115, LAST_LINE - 5, (correctData == true ? "V" : "X"));
+  displayText(115, last_line - 5, (correctData == true ? "V" : "X"));
   Serial.printf("caption: %s, isCorrectData: %s, value: %.2f\n", m->caption, (correctData == true ? "Y" : "N"), m->value);
   Serial.println("========================");
 }
 
 void drawProgressBar()
 {
-  displayText(0, LAST_LINE, "[");
-  displayText(100, LAST_LINE, "]");
+  displayText(0, last_line, "[");
+  displayText(100, last_line, "]");
 
   for (uint8_t columnIdx = 1; columnIdx < 100; columnIdx++)
   {
-    displayText(columnIdx, LAST_LINE - 3, ".");
+    displayText(columnIdx, last_line - 3, ".");
     delay(50);
   }
 }
@@ -475,7 +482,7 @@ void initWebserver()
 void deleteBondedDevices()
 {
   char bdaStr[18];
-  uint8_t pairedDeviceBtAddr[PAIR_MAX_DEVICES][6];
+  uint8_t pairedDeviceBtAddr[max_bt_paired_devices][6];
 
   initBluetooth();
   int32_t count = esp_bt_gap_get_bond_device_num();
@@ -486,9 +493,9 @@ void deleteBondedDevices()
   else
   {
     Serial.printf("Bonded device count: %d\n", count);
-    if (PAIR_MAX_DEVICES < count)
+    if (max_bt_paired_devices < count)
     {
-      count = PAIR_MAX_DEVICES;
+      count = max_bt_paired_devices;
       Serial.printf("Reset bonded device count: %d\n", count);
     }
     esp_err_t espErr = esp_bt_gap_get_bond_device_list(&count, pairedDeviceBtAddr);
@@ -497,13 +504,14 @@ void deleteBondedDevices()
       for (int16_t deviceIdx = 0; deviceIdx < count; deviceIdx++)
       {
         Serial.printf("Found bonded device # %d -> %s\n", deviceIdx, bda2str(pairedDeviceBtAddr[deviceIdx], bdaStr, 18));
-        if (REMOVE_BONDED_DEVICES)
+        espErr = esp_bt_gap_remove_bond_device(pairedDeviceBtAddr[deviceIdx]);
+        if (espErr == ESP_OK)
         {
-          espErr = esp_bt_gap_remove_bond_device(pairedDeviceBtAddr[deviceIdx]);
-          if (espErr == ESP_OK)
-            Serial.printf("Removed bonded device # %d\n", deviceIdx);
-          else
-            Serial.printf("Failed to remove bonded device # %d\n", deviceIdx);
+          Serial.printf("Removed bonded device # %d\n", deviceIdx);
+        }
+        else
+        {
+          Serial.printf("Failed to remove bonded device # %d\n", deviceIdx);
         }
       }
     }
@@ -560,7 +568,7 @@ void setup()
 
 void loop()
 {
-  char rxData[READ_BUFFER_SIZE];
+  char rxData[rx_buffer_size];
   size_t rxLen = 0;
 
 #ifdef ENABLE_WIFI

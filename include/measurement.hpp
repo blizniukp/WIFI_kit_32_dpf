@@ -1,9 +1,9 @@
 #ifndef MEASUREMENT_HPP
 #define MEASUREMENT_HPP
 
-#define MAX_UNIT_LENGTH (4)
-#define MAX_COMMAND_LENGTH (9)
-#define MAX_CAPTION_LENGTH (30)
+static const uint8_t MAX_UNIT_LENGTH = 4;
+static const uint8_t MAX_COMMAND_LENGTH = 9;
+static const uint8_t MAX_CAPTION_LENGTH = 30;
 
 typedef struct
 {
