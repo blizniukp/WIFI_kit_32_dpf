@@ -48,7 +48,7 @@ bool calcFun_AB(char* data, size_t data_len, float* val, float divider) {
     *val = -100.0f;
     return false;
   }
-  *val = (((getByteFromData(data, data_len, 11) * 256) + (getByteFromData(data, data_len, 13))) / divider);
+  *val = (((getByteFromData(data, data_len, 11) << 8) + (getByteFromData(data, data_len, 13))) / divider);
   return true;
 }
 
@@ -61,7 +61,7 @@ bool calcFun_ABCD(char* data, size_t data_len, float* val, float divider) {
     *val = -100.0f;
     return false;
   }
-  *val = (((getByteFromData(data, data_len, 11) * 16777216) + (getByteFromData(data, data_len, 13) * 65536) + (getByteFromData(data, data_len, 15) * 256) + (getByteFromData(data, data_len, 17))) / divider);
+  *val = (((getByteFromData(data, data_len, 11) << 24) + (getByteFromData(data, data_len, 13) << 16) + (getByteFromData(data, data_len, 15) << 8) + (getByteFromData(data, data_len, 17))) / divider);
   return true;
 }
 
@@ -74,6 +74,6 @@ bool calcFun_Temperature(char* data, size_t data_len, float* val, float divider)
     *val = -100.0f;
     return false;
   }
-  *val = ((((getByteFromData(data, data_len, 11) * 256) + (getByteFromData(data, data_len, 13))) - 2731) / divider);
+  *val = ((((getByteFromData(data, data_len, 11) << 8) + (getByteFromData(data, data_len, 13))) - 2731) / divider);
   return true;
 }
