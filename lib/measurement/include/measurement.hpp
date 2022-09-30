@@ -1,5 +1,8 @@
 #ifndef MEASUREMENT_HPP
 #define MEASUREMENT_HPP
+#include <stdint.h>
+#include <stdlib.h>
+#include <string.h>
 
 static const uint8_t MAX_UNIT_LENGTH = 4;
 static const uint8_t MAX_COMMAND_LENGTH = 9;
@@ -16,5 +19,11 @@ typedef struct {
     bool enabled;                                                               /*Is measurement on?*/
     void (*dataReadFunPtr)(float value);                                        /*Function executed after reading the value*/
 } measurement_t;
+
+int32_t getByteFromData(char* data, size_t data_len, uint8_t index);
+bool isCanError(char* response);
+bool calcFun_AB(char* data, size_t data_len, float* val, float divider);
+bool calcFun_ABCD(char* data, size_t data_len, float* val, float divider);
+bool calcFun_Temperature(char* data, size_t data_len, float* val, float divider);
 
 #endif
