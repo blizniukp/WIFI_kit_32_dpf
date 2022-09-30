@@ -8,7 +8,7 @@ static const uint8_t remove_bonded_devices = 1;
 static const uint8_t rx_buffer_size = 128;
 
 BluetoothSerial btSerial;
-SSD1306Wire *display;
+SSD1306Wire* display;
 
 #ifdef ENABLE_WIFI
 AsyncWebServer server(80);
@@ -20,9 +20,9 @@ bool removeBondedDevices = false;
 uint8_t logLineNumber = 0;
 bool connectByName = true;
 
-bool calcFun_AB(char *data, size_t data_len, float *val, float divider);
-bool calcFun_ABCD(char *data, size_t data_len, float *val, float divider);
-bool calcFun_Temperature(char *data, size_t data_len, float *val, float divider);
+bool calcFun_AB(char* data, size_t data_len, float* val, float divider);
+bool calcFun_ABCD(char* data, size_t data_len, float* val, float divider);
+bool calcFun_Temperature(char* data, size_t data_len, float* val, float divider);
 void dataReadFun_Temperature(float value);
 
 measurement_t measurements[] = {
@@ -40,29 +40,24 @@ uint8_t measurementIndex = 0;
 
 configuration_t config;
 
-void initDisplay()
-{
+void initDisplay() {
   display = new SSD1306Wire(0x3c, SDA_OLED, SCL_OLED, RST_OLED, GEOMETRY_128_64);
   display->init();
   display->setFont(ArialMT_Plain_10);
 }
 
-void displayText(uint8_t x, uint8_t y, String text)
-{
+void displayText(uint8_t x, uint8_t y, String text) {
   display->drawString(x, y, text);
   display->display();
 }
 
-void clearDisplay()
-{
+void clearDisplay() {
   display->clear();
   logLineNumber = 0;
 }
 
-void addToLog(String text)
-{
-  if (logLineNumber >= max_log_lines)
-  {
+void addToLog(String text) {
+  if (logLineNumber >= max_log_lines) {
     clearDisplay();
   }
 
@@ -72,51 +67,44 @@ void addToLog(String text)
   logLineNumber += 10;
 }
 
-void addBtResponseToSerialLog(String text)
-{
+void addBtResponseToSerialLog(String text) {
   Serial.printf("<[%d] %s\n", text.length(), text);
 }
 
-void addBtCommandToSerialLog(String text)
-{
+void addBtCommandToSerialLog(String text) {
   Serial.printf(">[%d] %s\n", text.length(), text);
 }
 
-void addResultToLog(bool result)
-{
-  if (result == true)
+void addResultToLog(bool result) {
+  if (result == true) {
     addToLog(" done");
-  else
+  }
+  else {
     addToLog(" ERROR!");
+  }
 }
 
-bool connect()
-{
+bool connect() {
   bool result = false;
   /*
   Connecting by name does not always work well.
   I had a problem with connecting to "OBDII" interface.
   The get_name_from_eir function (in BluetoothSerial.cpp file) returns an incorrect device name length (peer_bdname_len field).
   So, this is a workaround.*/
-  if (connectByName)
-  {
+  if (connectByName) {
     addToLog("Connecting to: " + config.bt_if_name);
     result = btSerial.connect(config.bt_if_name);
     connectByName = false;
   }
-  else
-  {
-    BTScanResults *btDeviceList = btSerial.getScanResults();
-    if (btDeviceList->getCount() > 0)
-    {
+  else {
+    BTScanResults* btDeviceList = btSerial.getScanResults();
+    if (btDeviceList->getCount() > 0) {
       BTAddress addr;
       Serial.printf("Found %d devices\n", btDeviceList->getCount());
-      for (uint8_t deviceIdx = 0; deviceIdx < btDeviceList->getCount(); deviceIdx++)
-      {
-        BTAdvertisedDevice *device = btDeviceList->getDevice(deviceIdx);
+      for (uint8_t deviceIdx = 0; deviceIdx < btDeviceList->getCount(); deviceIdx++) {
+        BTAdvertisedDevice* device = btDeviceList->getDevice(deviceIdx);
         Serial.printf(" -- Address: %s, Name: %s\n", device->getAddress().toString().c_str(), String(device->getName().c_str()));
-        if (device->getName().compare(config.bt_if_name.c_str()) == 0)
-        {
+        if (device->getName().compare(config.bt_if_name.c_str()) == 0) {
           addToLog("Connecting to: " + String(device->getAddress().toString().c_str()));
           result = btSerial.connect(device->getAddress());
         }
@@ -128,34 +116,27 @@ bool connect()
   return result;
 }
 
-void printDeviceStatus()
-{
+void printDeviceStatus() {
   Serial.printf("Connected: %s\n", (connected == true ? "Y" : "N"));
 }
 
-size_t btSerialRead(char *buffer, uint16_t timeout = 1500)
-{
+size_t btSerialRead(char* buffer, uint16_t timeout = 1500) {
   size_t data_len = 0;
   char c = '\0';
   buffer[0] = '\0';
   unsigned long btSerialReadTimeout = millis() + (max_bt_response_time * 1000) + timeout;
 
-  do
-  {
-    if (btSerial.available() > 0)
-    {
+  do {
+    if (btSerial.available() > 0) {
       c = btSerial.read();
-      if ((c != '>') && (c != '\r') && (c != '\n'))
-      {
+      if ((c != '>') && (c != '\r') && (c != '\n')) {
         buffer[data_len++] = c;
       }
-      if (data_len > rx_buffer_size)
-      {
+      if (data_len > rx_buffer_size) {
         data_len = 0;
       }
     }
-    if (btSerialReadTimeout < millis())
-    {
+    if (btSerialReadTimeout < millis()) {
       Serial.println("BtSerial read timeout error");
       break;
     }
@@ -170,15 +151,13 @@ size_t btSerialRead(char *buffer, uint16_t timeout = 1500)
   return data_len;
 }
 
-size_t btSerialReadAndAddToLog(char *buffer, uint16_t timeout = 1500)
-{
+size_t btSerialReadAndAddToLog(char* buffer, uint16_t timeout = 1500) {
   size_t rxLen = btSerialRead(buffer, timeout);
   addBtResponseToSerialLog(String(buffer));
   return rxLen;
 }
 
-void btSerialSendCommand(String command)
-{
+void btSerialSendCommand(String command) {
   btSerial.flush();
   addBtCommandToSerialLog(command);
   btSerial.print(command);
@@ -189,8 +168,7 @@ void btSerialSendCommand(String command)
 #endif
 }
 
-void btSerialInit(char *buffer)
-{
+void btSerialInit(char* buffer) {
   addToLog("OBD initialization...");
   btSerialSendCommand("ATZ\r");
   btSerialReadAndAddToLog(buffer);
@@ -236,10 +214,8 @@ void btSerialInit(char *buffer)
   btSerialReadAndAddToLog(buffer);
 }
 
-void btSerialCallback(esp_spp_cb_event_t event, esp_spp_cb_param_t *param)
-{
-  switch (event)
-  {
+void btSerialCallback(esp_spp_cb_event_t event, esp_spp_cb_param_t* param) {
+  switch (event) {
   case ESP_SPP_CLOSE_EVT:
   {
     addToLog("Disconnected!");
@@ -252,47 +228,48 @@ void btSerialCallback(esp_spp_cb_event_t event, esp_spp_cb_param_t *param)
   }
 }
 
-bool isCanError(char *response)
-{
-  char *ret = NULL;
+bool isCanError(char* response) {
+  char* ret = NULL;
   ret = strstr(response, "SEARCHING");
-  if (ret)
+  if (ret) {
     return true;
+  }
 
   ret = strstr(response, "CAN ERROR");
-  if (ret)
+  if (ret) {
     return true;
+  }
 
   ret = strstr(response, "STOPPED");
-  if (ret)
+  if (ret) {
     return true;
+  }
 
   ret = strstr(response, "UNABLE");
-  if (ret)
+  if (ret) {
     return true;
+  }
 
-  if (response[0] == '\0')
+  if (response[0] == '\0') {
     return true;
+  }
 
   return false;
 }
 
-int32_t getByteFromData(char *data, size_t data_len, uint8_t index)
-{
-  char buffer[3] = {0, 0, 0};
+int32_t getByteFromData(char* data, size_t data_len, uint8_t index) {
+  char buffer[3] = { 0, 0, 0 };
   buffer[0] = data[index];
   buffer[1] = data[index + 1];
   return (strtol(buffer, NULL, 16));
 }
 
-bool calcFun_AB(char *data, size_t data_len, float *val, float divider)
-{
+bool calcFun_AB(char* data, size_t data_len, float* val, float divider) {
 #ifdef RANDOM_DATA
-  *val = random(1, 100) / divider;
+  * val = random(1, 100) / divider;
   return (bool)random(0, 2);
 #endif
-  if (isCanError(data))
-  {
+  if (isCanError(data)) {
     *val = -100.0f;
     return false;
   }
@@ -300,14 +277,12 @@ bool calcFun_AB(char *data, size_t data_len, float *val, float divider)
   return true;
 }
 
-bool calcFun_ABCD(char *data, size_t data_len, float *val, float divider)
-{
+bool calcFun_ABCD(char* data, size_t data_len, float* val, float divider) {
 #ifdef RANDOM_DATA
-  *val = random(1, 100) / divider;
+  * val = random(1, 100) / divider;
   return (bool)random(0, 2);
 #endif
-  if (isCanError(data))
-  {
+  if (isCanError(data)) {
     *val = -100.0f;
     return false;
   }
@@ -315,14 +290,12 @@ bool calcFun_ABCD(char *data, size_t data_len, float *val, float divider)
   return true;
 }
 
-bool calcFun_Temperature(char *data, size_t data_len, float *val, float divider)
-{
+bool calcFun_Temperature(char* data, size_t data_len, float* val, float divider) {
 #ifdef RANDOM_DATA
-  *val = random(1, 100) / divider;
+  * val = random(1, 100) / divider;
   return (bool)random(0, 2);
 #endif
-  if (isCanError(data))
-  {
+  if (isCanError(data)) {
     *val = -100.0f;
     return false;
   }
@@ -330,13 +303,11 @@ bool calcFun_Temperature(char *data, size_t data_len, float *val, float divider)
   return true;
 }
 
-void dataReadFun_Temperature(float value)
-{
+void dataReadFun_Temperature(float value) {
   buzzer_set_temperature(value);
 }
 
-void displayData(bool correctData, measurement_t *m)
-{
+void displayData(bool correctData, measurement_t* m) {
   uint8_t xpos = 0, ypos = 0;
 
   clearDisplay();
@@ -344,10 +315,12 @@ void displayData(bool correctData, measurement_t *m)
   displayText(xpos, ypos, m->caption);
 
   display->setFont(ArialMT_Plain_24);
-  if (correctData)
+  if (correctData) {
     displayText(xpos, ypos + 25, String(m->value, 2) + " " + String(m->unit));
-  else
+  }
+  else {
     displayText(xpos, ypos + 25, "???");
+  }
 
   display->setFont(ArialMT_Plain_10);
   displayText(115, last_line - 5, (correctData == true ? "V" : "X"));
@@ -355,23 +328,19 @@ void displayData(bool correctData, measurement_t *m)
   Serial.println("========================");
 }
 
-void drawProgressBar()
-{
+void drawProgressBar() {
   displayText(0, last_line, "[");
   displayText(100, last_line, "]");
 
-  for (uint8_t columnIdx = 1; columnIdx < 100; columnIdx++)
-  {
+  for (uint8_t columnIdx = 1; columnIdx < 100; columnIdx++) {
     displayText(columnIdx, last_line - 3, ".");
     delay(50);
   }
 }
 
 #ifdef ENABLE_WIFI
-void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len)
-{
-  switch (type)
-  {
+void onEvent(AsyncWebSocket* server, AsyncWebSocketClient* client, AwsEventType type, void* arg, uint8_t* data, size_t len) {
+  switch (type) {
   case WS_EVT_CONNECT:
     Serial.printf("WebSocket client %u connected from %s\n", client->id(), client->remoteIP().toString().c_str());
     break;
@@ -385,76 +354,71 @@ void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType 
   }
 }
 
-void handleRoot(AsyncWebServerRequest *request)
-{
+void handleRoot(AsyncWebServerRequest* request) {
   request->send_P(200, "text/html", config_get_page(&config, measurements));
 }
 
-bool initBluetooth()
-{
-  if (btStarted())
-  {
+bool initBluetooth() {
+  if (btStarted()) {
     btStop();
   }
 
-  if (!btStart())
-  {
+  if (!btStart()) {
     Serial.println("Failed to initialize controller");
     return false;
   }
 
   esp_err_t espErr = esp_bluedroid_init();
-  if (espErr != ESP_OK)
-  {
+  if (espErr != ESP_OK) {
     Serial.printf("Failed to initialize bluedroid: %s\n", esp_err_to_name(espErr));
     return false;
   }
 
   espErr = esp_bluedroid_enable();
-  if (esp_bluedroid_enable() != ESP_OK)
-  {
+  if (esp_bluedroid_enable() != ESP_OK) {
     Serial.printf("Failed to enable bluedroid: %s\n", esp_err_to_name(espErr));
     return false;
   }
   return true;
 }
 
-char *bda2str(const uint8_t *bda, char *str, size_t size)
-{
-  if (bda == NULL || str == NULL || size < 18)
-  {
+char* bda2str(const uint8_t* bda, char* str, size_t size) {
+  if (bda == NULL || str == NULL || size < 18) {
     return NULL;
   }
   sprintf(str, "%02x:%02x:%02x:%02x:%02x:%02x",
-          bda[0], bda[1], bda[2], bda[3], bda[4], bda[5]);
+    bda[0], bda[1], bda[2], bda[3], bda[4], bda[5]);
   return str;
 }
 
-void handleRemove(AsyncWebServerRequest *request)
-{
+void handleRemove(AsyncWebServerRequest* request) {
   removeBondedDevices = true;
   request->send_P(200, "text/html", config_get_page(&config, measurements));
 }
 
-void handleSave(AsyncWebServerRequest *request)
-{
+void handleSave(AsyncWebServerRequest* request) {
   Serial.println("Got handleSave");
-  if (request->hasParam(CFG_BT_IF_NAME))
+  if (request->hasParam(CFG_BT_IF_NAME)) {
     config.bt_if_name = request->getParam(CFG_BT_IF_NAME)->value();
-  if (request->hasParam(CFG_BT_IF_PIN))
+  }
+  if (request->hasParam(CFG_BT_IF_PIN)) {
     config.bt_if_pin = request->getParam(CFG_BT_IF_PIN)->value();
-  if (request->hasParam(CFG_DISPLAY_FLIP_SCREEN))
+  }
+  if (request->hasParam(CFG_DISPLAY_FLIP_SCREEN)) {
     config.display_flip_screen = request->getParam(CFG_DISPLAY_FLIP_SCREEN)->value() == CFG_DISPLAY_FLIP_SCREEN ? true : false;
+  }
 
-  for (uint8_t msmIdx = 0; true; msmIdx++)
-  {
-    if (measurements[msmIdx].id == 0 || measurements[msmIdx].calcFunPtr == NULL)
+  for (uint8_t msmIdx = 0; true; msmIdx++) {
+    if (measurements[msmIdx].id == 0 || measurements[msmIdx].calcFunPtr == NULL) {
       break;
+    }
     String pname = "m_" + String(measurements[msmIdx].id);
-    if (request->hasParam(pname))
+    if (request->hasParam(pname)) {
       measurements[msmIdx].enabled = true;
-    else
+    }
+    else {
       measurements[msmIdx].enabled = false;
+    }
   }
 
   Serial.println("Save configuration");
@@ -464,8 +428,7 @@ void handleSave(AsyncWebServerRequest *request)
   ESP.restart();
 }
 
-void initWebserver()
-{
+void initWebserver() {
   WiFi.softAP(config.wifi_ssid.c_str(), config.wifi_passwd.c_str());
   IPAddress myIP = WiFi.softAPIP();
   addToLog("AP IP address: ");
@@ -479,38 +442,30 @@ void initWebserver()
 }
 #endif
 
-void deleteBondedDevices()
-{
+void deleteBondedDevices() {
   char bdaStr[18];
   uint8_t pairedDeviceBtAddr[max_bt_paired_devices][6];
 
   initBluetooth();
   int32_t count = esp_bt_gap_get_bond_device_num();
-  if (!count)
-  {
+  if (!count) {
     Serial.println("No bonded device found.");
   }
-  else
-  {
+  else {
     Serial.printf("Bonded device count: %d\n", count);
-    if (max_bt_paired_devices < count)
-    {
+    if (max_bt_paired_devices < count) {
       count = max_bt_paired_devices;
       Serial.printf("Reset bonded device count: %d\n", count);
     }
     esp_err_t espErr = esp_bt_gap_get_bond_device_list(&count, pairedDeviceBtAddr);
-    if (espErr == ESP_OK)
-    {
-      for (int16_t deviceIdx = 0; deviceIdx < count; deviceIdx++)
-      {
+    if (espErr == ESP_OK) {
+      for (int16_t deviceIdx = 0; deviceIdx < count; deviceIdx++) {
         Serial.printf("Found bonded device # %d -> %s\n", deviceIdx, bda2str(pairedDeviceBtAddr[deviceIdx], bdaStr, 18));
         espErr = esp_bt_gap_remove_bond_device(pairedDeviceBtAddr[deviceIdx]);
-        if (espErr == ESP_OK)
-        {
+        if (espErr == ESP_OK) {
           Serial.printf("Removed bonded device # %d\n", deviceIdx);
         }
-        else
-        {
+        else {
           Serial.printf("Failed to remove bonded device # %d\n", deviceIdx);
         }
       }
@@ -518,8 +473,7 @@ void deleteBondedDevices()
   }
 }
 
-void setup()
-{
+void setup() {
   Serial.begin(115200);
   bool result = false;
 
@@ -532,8 +486,9 @@ void setup()
   addToLog("Load configuration...");
   config_load(&config, measurements);
 
-  if (config.display_flip_screen)
+  if (config.display_flip_screen) {
     display->flipScreenVertically();
+  }
 
   addToLog("Enable buzzer");
   buzzer_init(BUZZER_PIN);
@@ -566,16 +521,14 @@ void setup()
 #endif
 }
 
-void loop()
-{
+void loop() {
   char rxData[rx_buffer_size];
   size_t rxLen = 0;
 
 #ifdef ENABLE_WIFI
   ws.cleanupClients();
 
-  if (removeBondedDevices)
-  {
+  if (removeBondedDevices) {
     removeBondedDevices = false;
     deleteBondedDevices();
   }
@@ -583,15 +536,13 @@ void loop()
 
   printDeviceStatus();
 
-  if (!connected)
-  {
+  if (!connected) {
     clearDisplay();
 
     connected = connect();
     addResultToLog(connected);
 
-    if (!connected)
-    {
+    if (!connected) {
       delay(50);
       return;
     }
@@ -601,29 +552,27 @@ void loop()
     measurementIndex = 0;
   }
 
-  if (!connected)
-  {
+  if (!connected) {
     delay(50);
     return;
   }
 
-  measurement_t *m = &measurements[measurementIndex];
+  measurement_t* m = &measurements[measurementIndex];
   btSerialSendCommand(m->command);
   rxLen = btSerialReadAndAddToLog(rxData);
   bool correctData = m->calcFunPtr(rxData, rxLen, &m->value, m->divider);
-  if (correctData && m->dataReadFunPtr)
+  if (correctData && m->dataReadFunPtr) {
     m->dataReadFunPtr(m->value);
+  }
 
   Serial.println("Display data");
   displayData(correctData, m);
 
   drawProgressBar();
-  do
-  {
+  do {
     measurementIndex++;
     if (measurements[measurementIndex].id == 0 ||
-        measurements[measurementIndex].calcFunPtr == NULL)
-    {
+      measurements[measurementIndex].calcFunPtr == NULL) {
       measurementIndex = 0;
     }
   } while (!measurements[measurementIndex].enabled);

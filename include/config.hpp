@@ -32,8 +32,7 @@
 #define CFG_BUZZER_THRESHOLD "buzzer_t"
 #define CFG_BUZZER_THRESHOLD_DEFAULT 400.0f
 
-typedef struct configuration_def
-{
+typedef struct configuration_def {
     String wifi_ssid;   /* AP SSID */
     String wifi_passwd; /* AP password */
 
@@ -46,7 +45,7 @@ typedef struct configuration_def
 } configuration_t;
 
 void config_init();
-void config_load(configuration_t *cfg, measurement_t m[]);
-bool config_save(configuration_t *cfg, measurement_t m[]);
-const char *config_get_page(configuration_t *cfg, measurement_t *m);
+void config_load(configuration_t* cfg, measurement_t m[]);
+bool config_save(configuration_t* cfg, measurement_t m[]);
+const char* config_get_page(configuration_t* cfg, measurement_t* m);
 #endif

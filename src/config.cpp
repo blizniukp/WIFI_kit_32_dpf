@@ -3,11 +3,9 @@
 Preferences pref;
 String config_page;
 
-void config_init()
-{
+void config_init() {
   esp_err_t ret = nvs_flash_init();
-  if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND)
-  {
+  if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
     Serial.println("nvs_flash_init error. Erasing flash");
     ESP_ERROR_CHECK(nvs_flash_erase());
 
@@ -18,45 +16,45 @@ void config_init()
   ESP_ERROR_CHECK(ret);
 }
 
-void config_load(configuration_t *cfg, measurement_t m[])
-{
+void config_load(configuration_t* cfg, measurement_t m[]) {
   bool result = pref.begin(CFG_NAMESPACE_WIFI, true);
-  if (!result)
+  if (!result) {
     Serial.printf("Namespace %s not found. Use default values.\n", CFG_NAMESPACE_WIFI);
+  }
   cfg->wifi_ssid = pref.getString(CFG_WIFI_SSID, CFG_WIFI_SSID_DEFAULT);
   cfg->wifi_passwd = pref.getString(CFG_WIFI_PASSWORD, CFG_WIFI_PASSWORD_DEFAULT);
   pref.end();
 
   result = pref.begin(CFG_NAMESPACE_BT, true);
-  if (!result)
+  if (!result) {
     Serial.printf("Namespace %s not found. Use default values.\n", CFG_NAMESPACE_BT);
+  }
   cfg->bt_if_name = pref.getString(CFG_BT_IF_NAME, CFG_BT_IF_NAME_DEFAULT);
   cfg->bt_if_pin = pref.getString(CFG_BT_IF_PIN, CFG_BT_IF_PIN_DEFAULT);
   pref.end();
 
   result = pref.begin(CFG_NAMESPACE_DISPLAY, true);
-  if (!result)
+  if (!result) {
     Serial.printf("Namespace %s not found. Use default values.\n", CFG_NAMESPACE_DISPLAY);
+  }
   cfg->display_flip_screen = pref.getBool(CFG_DISPLAY_FLIP_SCREEN, CFG_DISPLAY_FLIP_SCREEN_DEFAULT);
   pref.end();
 
   result = pref.begin(CFG_NAMESPACE_MEASUREMENTS, true);
-  if (!result)
-  {
+  if (!result) {
     Serial.printf("Namespace %s not found. Use default values.\n", CFG_NAMESPACE_MEASUREMENTS);
   }
-  for (uint8_t msmIdx = 0; true; msmIdx++)
-  {
-    if (m[msmIdx].id == 0 || m[msmIdx].calcFunPtr == NULL)
+  for (uint8_t msmIdx = 0; true; msmIdx++) {
+    if (m[msmIdx].id == 0 || m[msmIdx].calcFunPtr == NULL) {
       break;
+    }
     String key = "m_" + String(m[msmIdx].id);
     m[msmIdx].enabled = pref.getBool(key.c_str(), true);
   }
   pref.end();
 
   result = pref.begin(CFG_NAMESPACE_BUZZER, true);
-  if (!result)
-  {
+  if (!result) {
     Serial.printf("Namespace %s not found. Use default values.\n", CFG_NAMESPACE_BUZZER);
   }
   cfg->temperature_threshold = pref.getFloat(CFG_BUZZER_THRESHOLD, CFG_BUZZER_THRESHOLD_DEFAULT);
@@ -72,10 +70,10 @@ void config_load(configuration_t *cfg, measurement_t m[])
   Serial.println("Display:");
   Serial.printf("%s: %s\n", CFG_DISPLAY_FLIP_SCREEN, (cfg->display_flip_screen == true ? "Yes" : "No"));
   Serial.println("Measurements:");
-  for (uint8_t msmIdx = 0; true; msmIdx++)
-  {
-    if (m[msmIdx].id == 0 || m[msmIdx].calcFunPtr == NULL)
+  for (uint8_t msmIdx = 0; true; msmIdx++) {
+    if (m[msmIdx].id == 0 || m[msmIdx].calcFunPtr == NULL) {
       break;
+    }
     Serial.print("m_" + String(m[msmIdx].id));
     Serial.printf(": %s\n", m[msmIdx].enabled == true ? "true" : "false");
   }
@@ -84,11 +82,9 @@ void config_load(configuration_t *cfg, measurement_t m[])
 #endif
 }
 
-bool config_save(configuration_t *cfg, measurement_t m[])
-{
+bool config_save(configuration_t* cfg, measurement_t m[]) {
   bool result = pref.begin(CFG_NAMESPACE_WIFI, false);
-  if (!result)
-  {
+  if (!result) {
     Serial.printf("Can't open namespace: %s\n", CFG_NAMESPACE_WIFI);
     return false;
   }
@@ -97,8 +93,7 @@ bool config_save(configuration_t *cfg, measurement_t m[])
   pref.end();
 
   result = pref.begin(CFG_NAMESPACE_BT, false);
-  if (!result)
-  {
+  if (!result) {
     Serial.printf("Can't open namespace: %s\n", CFG_NAMESPACE_BT);
     return false;
   }
@@ -107,8 +102,7 @@ bool config_save(configuration_t *cfg, measurement_t m[])
   pref.end();
 
   result = pref.begin(CFG_NAMESPACE_DISPLAY, false);
-  if (!result)
-  {
+  if (!result) {
     Serial.printf("Can't open namespace: %s\n", CFG_NAMESPACE_DISPLAY);
     return false;
   }
@@ -116,23 +110,21 @@ bool config_save(configuration_t *cfg, measurement_t m[])
   pref.end();
 
   result = pref.begin(CFG_NAMESPACE_MEASUREMENTS, false);
-  if (!result)
-  {
+  if (!result) {
     Serial.printf("Can't open namespace: %s\n", CFG_NAMESPACE_MEASUREMENTS);
     return false;
   }
-  for (uint8_t msmIdx = 0; true; msmIdx++)
-  {
-    if (m[msmIdx].id == 0 || m[msmIdx].calcFunPtr == NULL)
+  for (uint8_t msmIdx = 0; true; msmIdx++) {
+    if (m[msmIdx].id == 0 || m[msmIdx].calcFunPtr == NULL) {
       break;
+    }
     String key = "m_" + String(m[msmIdx].id);
     pref.putBool(key.c_str(), m[msmIdx].enabled);
   }
   pref.end();
 
   result = pref.begin(CFG_NAMESPACE_BUZZER, false);
-  if (!result)
-  {
+  if (!result) {
     Serial.printf("Can't open namespace: %s\n", CFG_NAMESPACE_BUZZER);
     return false;
   }
@@ -142,15 +134,13 @@ bool config_save(configuration_t *cfg, measurement_t m[])
   return true;
 }
 
-static String config_get_page_header()
-{
+static String config_get_page_header() {
   return R"rawliteral(<html>
 <meta name='viewport' content='width=device-width, initial-scale=1'>
 <body style='background-color:#161317; color: white'>)rawliteral";
 }
 
-static String config_get_page_footer()
-{
+static String config_get_page_footer() {
   return R"rawliteral(<p>Bluetooth serial dump:</p>
   <p><textarea name="serial" id="serial" rows="30" cols="40"></textarea></p>
 </body>
@@ -190,8 +180,7 @@ static String config_get_page_footer()
 </html>)rawliteral";
 }
 
-static String config_get_page_body(configuration_t *cfg, measurement_t *m)
-{
+static String config_get_page_body(configuration_t* cfg, measurement_t* m) {
   String flip_screen = cfg->display_flip_screen == true ? "checked" : "";
   String body_page = "<form action='/save'>";
   body_page += "<label for='bt_name'>Bluetooth interface name</label><br>";
@@ -203,10 +192,10 @@ static String config_get_page_body(configuration_t *cfg, measurement_t *m)
   body_page += "<label for='d_flip'>Flip screen vertically</label><br>";
   body_page += "<input type='checkbox' id='d_flip' name='d_flip' value='d_flip' " + flip_screen + " ><br><br>";
 
-  for (uint8_t msmIdx = 0; true; msmIdx++)
-  {
-    if (m[msmIdx].id == 0 || m[msmIdx].calcFunPtr == NULL)
+  for (uint8_t msmIdx = 0; true; msmIdx++) {
+    if (m[msmIdx].id == 0 || m[msmIdx].calcFunPtr == NULL) {
       break;
+    }
     String key = "m_" + String(m[msmIdx].id);
     body_page += "<label><input type='checkbox' " + String(m[msmIdx].enabled == true ? "checked" : "") + " name='" + key + "' id='" + key + "' value='" + key + "'>" + String(m[msmIdx].caption) + "</label><br>";
   }
@@ -217,10 +206,10 @@ static String config_get_page_body(configuration_t *cfg, measurement_t *m)
   return body_page;
 }
 
-const char *config_get_page(configuration_t *cfg, measurement_t *m)
-{
-  if (!config_page.isEmpty())
+const char* config_get_page(configuration_t* cfg, measurement_t* m) {
+  if (!config_page.isEmpty()) {
     config_page.clear();
+  }
 
   config_page += config_get_page_header();
   config_page += config_get_page_body(cfg, m);
