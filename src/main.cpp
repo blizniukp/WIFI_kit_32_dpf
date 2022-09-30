@@ -36,8 +36,6 @@ measurement_t measurements[] = {
     {0, "", "", "", 0.0f, NULL, 0.0f, false},
 };
 
-uint8_t measurementIndex = 0;
-
 configuration_t config;
 
 void initDisplay() {
@@ -526,6 +524,7 @@ void setup() {
 }
 
 void loop() {
+  static uint8_t measurementIdx = 0;
   char rxData[rx_buffer_size];
   size_t rxLen = 0;
 
@@ -553,7 +552,7 @@ void loop() {
 
     addToLog("Connected");
     btSerialInit(rxData);
-    measurementIndex = 0;
+    measurementIdx = 0;
   }
 
   if (!connected) {
@@ -561,7 +560,7 @@ void loop() {
     return;
   }
 
-  measurement_t* m = &measurements[measurementIndex];
+  measurement_t* m = &measurements[measurementIdx];
   btSerialSendCommand(m->command);
   rxLen = btSerialReadAndAddToLog(rxData);
   bool correctData = m->calcFunPtr(rxData, rxLen, &m->value, m->divider);
@@ -574,10 +573,10 @@ void loop() {
 
   drawProgressBar();
   do {
-    measurementIndex++;
-    if (measurements[measurementIndex].id == 0 ||
-      measurements[measurementIndex].calcFunPtr == NULL) {
-      measurementIndex = 0;
+    measurementIdx++;
+    if (measurements[measurementIdx].id == 0 ||
+      measurements[measurementIdx].calcFunPtr == NULL) {
+      measurementIdx = 0;
     }
-  } while (!measurements[measurementIndex].enabled);
+  } while (!measurements[measurementIdx].enabled);
 }
