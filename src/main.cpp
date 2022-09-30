@@ -339,6 +339,7 @@ void drawProgressBar() {
 }
 
 #ifdef ENABLE_WIFI
+#ifdef DEBUG
 void onEvent(AsyncWebSocket* server, AsyncWebSocketClient* client, AwsEventType type, void* arg, uint8_t* data, size_t len) {
   switch (type) {
   case WS_EVT_CONNECT:
@@ -353,6 +354,7 @@ void onEvent(AsyncWebSocket* server, AsyncWebSocketClient* client, AwsEventType 
     break;
   }
 }
+#endif
 
 void handleRoot(AsyncWebServerRequest* request) {
   request->send_P(200, "text/html", config_get_page(&config, measurements));
@@ -436,7 +438,9 @@ void initWebserver() {
   server.on("/", HTTP_GET, handleRoot);
   server.on("/remove", HTTP_GET, handleRemove);
   server.on("/save", HTTP_GET, handleSave);
+#ifdef DEBUG
   ws.onEvent(onEvent);
+#endif
   server.addHandler(&ws);
   server.begin();
 }
