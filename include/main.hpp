@@ -5,6 +5,7 @@
 #include <Wire.h>
 #include <BluetoothSerial.h>
 #include "oled/SSD1306Wire.h"
+#include <vector>
 #ifdef ENABLE_WIFI
 #include <WiFi.h>
 #include <WiFiAP.h>

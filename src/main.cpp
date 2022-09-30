@@ -22,18 +22,23 @@ bool connectByName = true;
 
 void dataReadFun_Temperature(float value);
 
-measurement_t measurements[] = {
-    {1, "Soot mass measured", "22114E1\r", "g", -100.0f, &calcFun_AB, 100.0f, true, NULL},
-    {2, "Soot mass calculated", "22114F1\r", "g", -100.0f, &calcFun_AB, 100.0f, true, NULL},
-    {3, "Distance since last regen.", "221156\r", "km", -100.0f, &calcFun_ABCD, 1000.0f, true, NULL},
-    {4, "Time since last regen", "22115E\r", "min", -100.0f, &calcFun_ABCD, 60.0f, false, NULL},
-    {5, "Input temperature", "2211B2\r", "*C", -100.0f, &calcFun_Temperature, 10.0f, true, &dataReadFun_Temperature},
-    {6, "Outptu temperature", "2210F9\r", "*C", -100.0f, &calcFun_Temperature, 10.0f, false, NULL},
-    {7, "Oil Ash Residue", "22178C\r", "g", -100.0f, &calcFun_AB, 10.0f, false, NULL},
-    {0, "", "", "", 0.0f, NULL, 0.0f, false},
-};
-
+std::vector<measurement_t> measurements;
 configuration_t config;
+
+void initMeasurements(std::vector<measurement_t>& m) {
+  m.push_back((measurement_t) { 1, "Soot mass measured", "22114E1\r", "g", -100.0f, & calcFun_AB, 100.0f, true, NULL });
+  m.push_back((measurement_t) { 2, "Soot mass calculated", "22114F1\r", "g", -100.0f, & calcFun_AB, 100.0f, true, NULL });
+  m.push_back((measurement_t) { 3, "Distance since last regen.", "221156\r", "km", -100.0f, & calcFun_ABCD, 1000.0f, true, NULL });
+  m.push_back((measurement_t) { 4, "Time since last regen", "22115E\r", "min", -100.0f, & calcFun_ABCD, 60.0f, false, NULL });
+  m.push_back((measurement_t) { 5, "Input temperature", "2211B2\r", "*C", -100.0f, & calcFun_Temperature, 10.0f, true, & dataReadFun_Temperature });
+  m.push_back((measurement_t) { 6, "Output temperature", "2210F9\r", "*C", -100.0f, & calcFun_Temperature, 10.0f, false, NULL });
+  m.push_back((measurement_t) { 7, "Oil Ash Residue", "22178C\r", "g", -100.0f, & calcFun_AB, 10.0f, false, NULL });
+#if DEBUG
+  for (uint8_t msmIdx = 0; msmIdx < m.size(); msmIdx++) {
+    Serial.printf("measurement[%d]: %s\n", m[msmIdx].id, m[msmIdx].caption);
+  }
+#endif
+}
 
 void initDisplay() {
   display = new SSD1306Wire(0x3c, SDA_OLED, SCL_OLED, RST_OLED, GEOMETRY_128_64);
@@ -330,10 +335,7 @@ void handleSave(AsyncWebServerRequest* request) {
     config.display_flip_screen = request->getParam(CFG_DISPLAY_FLIP_SCREEN)->value() == CFG_DISPLAY_FLIP_SCREEN ? true : false;
   }
 
-  for (uint8_t msmIdx = 0; true; msmIdx++) {
-    if (measurements[msmIdx].id == 0 || measurements[msmIdx].calcFunPtr == NULL) {
-      break;
-    }
+  for (uint8_t msmIdx = 0; msmIdx < measurements.size(); msmIdx++) {
     String pname = "m_" + String(measurements[msmIdx].id);
     if (request->hasParam(pname)) {
       measurements[msmIdx].enabled = true;
@@ -400,6 +402,8 @@ void deleteBondedDevices() {
 void setup() {
   Serial.begin(115200);
   bool result = false;
+
+  initMeasurements(measurements);
 
   initDisplay();
   addToLog("Display initialized");
@@ -496,7 +500,7 @@ void loop() {
   drawProgressBar();
   do {
     measurementIdx++;
-    if (measurements[measurementIdx].id == 0 ||
+    if (measurementIdx >= measurements.size() ||
       measurements[measurementIdx].calcFunPtr == NULL) {
       measurementIdx = 0;
     }

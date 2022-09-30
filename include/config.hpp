@@ -5,6 +5,7 @@
 #include <Arduino.h>
 #include <Preferences.h>
 #include <nvs_flash.h>
+#include <vector>
 #include "measurement.hpp"
 
 #define CFG_NAMESPACE_WIFI "wifi"
@@ -45,7 +46,7 @@ typedef struct configuration_def {
 } configuration_t;
 
 void config_init();
-void config_load(configuration_t* cfg, measurement_t m[]);
-bool config_save(configuration_t* cfg, measurement_t m[]);
-const char* config_get_page(configuration_t* cfg, measurement_t* m);
+void config_load(configuration_t* cfg, std::vector<measurement_t>& m);
+bool config_save(configuration_t* cfg, std::vector<measurement_t>& m);
+const char* config_get_page(configuration_t* cfg, std::vector<measurement_t>& m);
 #endif

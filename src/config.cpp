@@ -1,3 +1,4 @@
+#include <vector>
 #include "config.hpp"
 
 Preferences pref;
@@ -16,7 +17,7 @@ void config_init() {
   ESP_ERROR_CHECK(ret);
 }
 
-void config_load(configuration_t* cfg, measurement_t m[]) {
+void config_load(configuration_t* cfg, std::vector<measurement_t>& m) {
   bool result = pref.begin(CFG_NAMESPACE_WIFI, true);
   if (!result) {
     Serial.printf("Namespace %s not found. Use default values.\n", CFG_NAMESPACE_WIFI);
@@ -44,10 +45,7 @@ void config_load(configuration_t* cfg, measurement_t m[]) {
   if (!result) {
     Serial.printf("Namespace %s not found. Use default values.\n", CFG_NAMESPACE_MEASUREMENTS);
   }
-  for (uint8_t msmIdx = 0; true; msmIdx++) {
-    if (m[msmIdx].id == 0 || m[msmIdx].calcFunPtr == NULL) {
-      break;
-    }
+  for (uint8_t msmIdx = 0; msmIdx < m.size(); msmIdx++) {
     String key = "m_" + String(m[msmIdx].id);
     m[msmIdx].enabled = pref.getBool(key.c_str(), true);
   }
@@ -70,10 +68,7 @@ void config_load(configuration_t* cfg, measurement_t m[]) {
   Serial.println("Display:");
   Serial.printf("%s: %s\n", CFG_DISPLAY_FLIP_SCREEN, (cfg->display_flip_screen == true ? "Yes" : "No"));
   Serial.println("Measurements:");
-  for (uint8_t msmIdx = 0; true; msmIdx++) {
-    if (m[msmIdx].id == 0 || m[msmIdx].calcFunPtr == NULL) {
-      break;
-    }
+  for (uint8_t msmIdx = 0; msmIdx < m.size(); msmIdx++) {
     Serial.print("m_" + String(m[msmIdx].id));
     Serial.printf(": %s\n", m[msmIdx].enabled == true ? "true" : "false");
   }
@@ -82,7 +77,7 @@ void config_load(configuration_t* cfg, measurement_t m[]) {
 #endif
 }
 
-bool config_save(configuration_t* cfg, measurement_t m[]) {
+bool config_save(configuration_t* cfg, std::vector<measurement_t>& m) {
   bool result = pref.begin(CFG_NAMESPACE_WIFI, false);
   if (!result) {
     Serial.printf("Can't open namespace: %s\n", CFG_NAMESPACE_WIFI);
@@ -114,10 +109,7 @@ bool config_save(configuration_t* cfg, measurement_t m[]) {
     Serial.printf("Can't open namespace: %s\n", CFG_NAMESPACE_MEASUREMENTS);
     return false;
   }
-  for (uint8_t msmIdx = 0; true; msmIdx++) {
-    if (m[msmIdx].id == 0 || m[msmIdx].calcFunPtr == NULL) {
-      break;
-    }
+  for (uint8_t msmIdx = 0; msmIdx < m.size(); msmIdx++) {
     String key = "m_" + String(m[msmIdx].id);
     pref.putBool(key.c_str(), m[msmIdx].enabled);
   }
@@ -180,7 +172,7 @@ static String config_get_page_footer() {
 </html>)rawliteral";
 }
 
-static String config_get_page_body(configuration_t* cfg, measurement_t* m) {
+static String config_get_page_body(configuration_t* cfg, std::vector<measurement_t>& m) {
   String flip_screen = cfg->display_flip_screen == true ? "checked" : "";
   String body_page = "<form action='/save'>";
   body_page += "<label for='bt_name'>Bluetooth interface name</label><br>";
@@ -192,10 +184,7 @@ static String config_get_page_body(configuration_t* cfg, measurement_t* m) {
   body_page += "<label for='d_flip'>Flip screen vertically</label><br>";
   body_page += "<input type='checkbox' id='d_flip' name='d_flip' value='d_flip' " + flip_screen + " ><br><br>";
 
-  for (uint8_t msmIdx = 0; true; msmIdx++) {
-    if (m[msmIdx].id == 0 || m[msmIdx].calcFunPtr == NULL) {
-      break;
-    }
+  for (uint8_t msmIdx = 0; msmIdx < m.size(); msmIdx++) {
     String key = "m_" + String(m[msmIdx].id);
     body_page += "<label><input type='checkbox' " + String(m[msmIdx].enabled == true ? "checked" : "") + " name='" + key + "' id='" + key + "' value='" + key + "'>" + String(m[msmIdx].caption) + "</label><br>";
   }
@@ -206,7 +195,7 @@ static String config_get_page_body(configuration_t* cfg, measurement_t* m) {
   return body_page;
 }
 
-const char* config_get_page(configuration_t* cfg, measurement_t* m) {
+const char* config_get_page(configuration_t* cfg, std::vector<measurement_t>& m) {
   if (!config_page.isEmpty()) {
     config_page.clear();
   }
