@@ -170,48 +170,27 @@ void btSerialSendCommand(String command) {
 
 void btSerialInit(char* buffer) {
   addToLog("OBD initialization...");
-  btSerialSendCommand("ATZ\r");
-  btSerialReadAndAddToLog(buffer);
-  btSerialSendCommand("ATE0\r");
-  btSerialReadAndAddToLog(buffer);
+  std::vector<String> initCommands = {
+    "ATZ\r", "ATE0\r", "STI\r","VTI\r","ATD\r","ATE0\r",
+    "ATSP0\r","ATE0\r","ATH1\r", "ATM0\r","ATS0\r","ATAT1\r",
+    "ATAL\r","ATST64\r"
+  };
+  std::vector<String> initCommands2 = {
+    "ATDPN\r", "ATSH7E0\r", "10031\r"
+  };
 
-  btSerialSendCommand("STI\r");
-  btSerialReadAndAddToLog(buffer);
-  btSerialSendCommand("VTI\r");
-  btSerialReadAndAddToLog(buffer);
-  btSerialSendCommand("ATD\r");
-  btSerialReadAndAddToLog(buffer);
-  btSerialSendCommand("ATE0\r");
-  btSerialReadAndAddToLog(buffer);
-
-  btSerialSendCommand("ATSP0\r");
-  btSerialReadAndAddToLog(buffer);
-  btSerialSendCommand("ATE0\r");
-  btSerialReadAndAddToLog(buffer);
-  btSerialSendCommand("ATH1\r");
-  btSerialReadAndAddToLog(buffer);
-
-  btSerialSendCommand("ATM0\r");
-  btSerialReadAndAddToLog(buffer);
-  btSerialSendCommand("ATS0\r");
-  btSerialReadAndAddToLog(buffer);
-  btSerialSendCommand("ATAT1\r");
-  btSerialReadAndAddToLog(buffer);
-  btSerialSendCommand("ATAL\r");
-  btSerialReadAndAddToLog(buffer);
-  btSerialSendCommand("ATST64\r");
-  btSerialReadAndAddToLog(buffer);
+  for (uint8_t initCmdIdx = 0; initCmdIdx < initCommands.size(); initCmdIdx++) {
+    btSerialSendCommand(initCommands[initCmdIdx]);
+    btSerialReadAndAddToLog(buffer);
+  }
 
   btSerialSendCommand("0100\r"); // SEARCHING...
   btSerialReadAndAddToLog(buffer, 5000);
 
-  btSerialSendCommand("ATDPN\r");
-  btSerialReadAndAddToLog(buffer);
-
-  btSerialSendCommand("ATSH7E0\r");
-  btSerialReadAndAddToLog(buffer);
-  btSerialSendCommand("10031\r");
-  btSerialReadAndAddToLog(buffer);
+  for (uint8_t initCmdIdx = 0; initCmdIdx < initCommands2.size(); initCmdIdx++) {
+    btSerialSendCommand(initCommands2[initCmdIdx]);
+    btSerialReadAndAddToLog(buffer);
+  }
 }
 
 void btSerialCallback(esp_spp_cb_event_t event, esp_spp_cb_param_t* param) {
