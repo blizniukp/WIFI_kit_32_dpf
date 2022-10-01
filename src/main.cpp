@@ -317,6 +317,9 @@ void handleSave(AsyncWebServerRequest* request) {
   if (request->hasParam(CFG_DISPLAY_FLIP_SCREEN)) {
     config.display_flip_screen = request->getParam(CFG_DISPLAY_FLIP_SCREEN)->value() == CFG_DISPLAY_FLIP_SCREEN ? true : false;
   }
+  if (request->hasParam(CFG_BUZZER_THRESHOLD)) {
+    config.temperature_threshold = request->getParam(CFG_BUZZER_THRESHOLD)->value().toFloat();
+  }
 
   for (uint8_t msmIdx = 0; msmIdx < measurements.size(); msmIdx++) {
     String pname = "m_" + String(measurements[msmIdx].id);
