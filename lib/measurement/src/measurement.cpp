@@ -41,8 +41,8 @@ bool isCanError(char* response) {
 
 bool calcFun_AB(char* data, size_t data_len, float* val, float divider) {
 #ifdef RANDOM_DATA
-  * val = random(1, 100) / divider;
-  return (bool)random(0, 2);
+  * val = ((random() % 100) + 1) / divider;
+  return (bool)random() % 1;
 #endif
   if (isCanError(data)) {
     *val = -100.0f;
@@ -54,8 +54,8 @@ bool calcFun_AB(char* data, size_t data_len, float* val, float divider) {
 
 bool calcFun_ABCD(char* data, size_t data_len, float* val, float divider) {
 #ifdef RANDOM_DATA
-  * val = random(1, 100) / divider;
-  return (bool)random(0, 2);
+  * val = ((random() % 100) + 1) / divider;
+  return (bool)random() % 1;
 #endif
   if (isCanError(data)) {
     *val = -100.0f;
@@ -67,8 +67,8 @@ bool calcFun_ABCD(char* data, size_t data_len, float* val, float divider) {
 
 bool calcFun_Temperature(char* data, size_t data_len, float* val, float divider) {
 #ifdef RANDOM_DATA
-  * val = random(1, 100) / divider;
-  return (bool)random(0, 2);
+  * val = ((random() % 100) + 1) / divider;
+  return (bool)random() % 1;
 #endif
   if (isCanError(data)) {
     *val = -100.0f;
