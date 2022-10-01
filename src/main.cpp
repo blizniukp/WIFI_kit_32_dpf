@@ -85,7 +85,7 @@ void addResultToLog(bool result) {
 }
 
 bool connect() {
-  bool result = false;
+  bool connected = false;
   /*
   Connecting by name does not always work well.
   I had a problem with connecting to "OBDII" interface.
@@ -93,7 +93,7 @@ bool connect() {
   So, this is a workaround.*/
   if (connectByName) {
     addToLog("Connecting to: " + config.bt_if_name);
-    result = btSerial.connect(config.bt_if_name);
+    connected = btSerial.connect(config.bt_if_name);
     connectByName = false;
   }
   else {
@@ -106,14 +106,14 @@ bool connect() {
         Serial.printf(" -- Address: %s, Name: %s\n", device->getAddress().toString().c_str(), String(device->getName().c_str()));
         if (device->getName().compare(config.bt_if_name.c_str()) == 0) {
           addToLog("Connecting to: " + String(device->getAddress().toString().c_str()));
-          result = btSerial.connect(device->getAddress());
+          connected = btSerial.connect(device->getAddress());
         }
       }
     }
     connectByName = true;
   }
 
-  return result;
+  return connected;
 }
 
 void printDeviceStatus() {
