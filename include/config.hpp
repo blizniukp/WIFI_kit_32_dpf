@@ -48,5 +48,5 @@ typedef struct configuration_def {
 void config_init();
 void config_load(configuration_t* cfg, std::vector<measurement_t>& m);
 bool config_save(configuration_t* cfg, std::vector<measurement_t>& m);
-void config_get_page(std::ostringstream* configPage, configuration_t* cfg, std::vector<measurement_t>& m);
+void config_get_page(std::ostringstream* const configPage, configuration_t* cfg, std::vector<measurement_t>* m);
 #endif

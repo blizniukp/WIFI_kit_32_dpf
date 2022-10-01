@@ -262,7 +262,7 @@ void onEvent(AsyncWebSocket* server, AsyncWebSocketClient* client, AwsEventType 
 
 void handleRoot(AsyncWebServerRequest* request) {
   std::ostringstream configPage;
-  config_get_page(&configPage, &config, measurements);
+  config_get_page(&configPage, &config, &measurements);
   request->send_P(200, "text/html", configPage.str().c_str());
 }
 
@@ -302,7 +302,7 @@ char* bda2str(const uint8_t* bda, char* str, size_t size) {
 void handleRemove(AsyncWebServerRequest* request) {
   removeBondedDevices = true;
   std::ostringstream configPage;
-  config_get_page(&configPage, &config, measurements);
+  config_get_page(&configPage, &config, &measurements);
   request->send_P(200, "text/html", configPage.str().c_str());
 }
 

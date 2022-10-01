@@ -125,13 +125,13 @@ bool config_save(configuration_t* cfg, std::vector<measurement_t>& m) {
   return true;
 }
 
-static void config_get_page_header(std::ostringstream* configPage) {
+static void config_get_page_header(std::ostringstream* const configPage) {
   *configPage << R"rawliteral(<html>
 <meta name='viewport' content='width=device-width, initial-scale=1'>
 <body style='background-color:#161317; color: white'>)rawliteral";
 }
 
-static void config_get_page_footer(std::ostringstream* configPage) {
+static void config_get_page_footer(std::ostringstream* const configPage) {
   *configPage << R"rawliteral(<p>Bluetooth serial dump:</p>
   <p><textarea name="serial" id="serial" rows="30" cols="40"></textarea></p>
 </body>
@@ -171,7 +171,7 @@ static void config_get_page_footer(std::ostringstream* configPage) {
 </html>)rawliteral";
 }
 
-static void config_get_page_body(std::ostringstream* configPage, configuration_t* cfg, std::vector<measurement_t>& m) {
+static void config_get_page_body(std::ostringstream* const configPage, configuration_t* const cfg, std::vector<measurement_t>* const m) {
   String flip_screen = cfg->display_flip_screen == true ? "checked" : "";
   *configPage << "<form action='/save'>";
   *configPage << "<label for='bt_name'>Bluetooth interface name</label><br>";
@@ -183,9 +183,10 @@ static void config_get_page_body(std::ostringstream* configPage, configuration_t
   *configPage << "<label for='d_flip'>Flip screen vertically</label><br>";
   *configPage << "<input type='checkbox' id='d_flip' name='d_flip' value='d_flip' " << flip_screen.c_str() << " ><br><br>";
 
-  for (uint8_t msmIdx = 0; msmIdx < m.size(); msmIdx++) {
-    String key = "m_" + String(m[msmIdx].id);
-    *configPage << "<label><input type='checkbox' " << (m[msmIdx].enabled == true ? "checked" : "") << " name='" << key.c_str() << "' id='" << key.c_str() << "' value='" << key.c_str() << "'>" << m[msmIdx].caption << "</label><br>";
+  for (uint8_t msmIdx = 0; msmIdx < m->size(); msmIdx++) {
+    measurement_t* msm = &(*m)[msmIdx];
+    String key = "m_" + String(msm->id);
+    *configPage << "<label><input type='checkbox' " << (msm->enabled == true ? "checked" : "") << " name='" << key.c_str() << "' id='" << key.c_str() << "' value='" << key.c_str() << "'>" << msm->caption << "</label><br>";
   }
 
   *configPage << "<input type='submit' value='Save'></form>";
@@ -193,7 +194,7 @@ static void config_get_page_body(std::ostringstream* configPage, configuration_t
   *configPage << "<form action='/remove'><input type='submit' value='Remove bonded devices'></form>";
 }
 
-void config_get_page(std::ostringstream* configPage, configuration_t* cfg, std::vector<measurement_t>& m) {
+void config_get_page(std::ostringstream* const configPage, configuration_t* const cfg, std::vector<measurement_t>* const m) {
   config_get_page_header(configPage);
   config_get_page_body(configPage, cfg, m);
   config_get_page_footer(configPage);
