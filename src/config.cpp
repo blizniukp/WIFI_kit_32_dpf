@@ -1,8 +1,8 @@
 #include <vector>
+#include <sstream>
 #include "config.hpp"
 
 Preferences pref;
-String config_page;
 
 void config_init() {
   esp_err_t ret = nvs_flash_init();
@@ -13,7 +13,6 @@ void config_init() {
     Serial.println("Execute nvs_flash_init");
     ret = nvs_flash_init();
   }
-
   ESP_ERROR_CHECK(ret);
 }
 
@@ -126,14 +125,14 @@ bool config_save(configuration_t* cfg, std::vector<measurement_t>& m) {
   return true;
 }
 
-static String config_get_page_header() {
-  return R"rawliteral(<html>
+static void config_get_page_header(std::ostringstream* configPage) {
+  *configPage << R"rawliteral(<html>
 <meta name='viewport' content='width=device-width, initial-scale=1'>
 <body style='background-color:#161317; color: white'>)rawliteral";
 }
 
-static String config_get_page_footer() {
-  return R"rawliteral(<p>Bluetooth serial dump:</p>
+static void config_get_page_footer(std::ostringstream* configPage) {
+  *configPage << R"rawliteral(<p>Bluetooth serial dump:</p>
   <p><textarea name="serial" id="serial" rows="30" cols="40"></textarea></p>
 </body>
 <script>
@@ -172,36 +171,30 @@ static String config_get_page_footer() {
 </html>)rawliteral";
 }
 
-static String config_get_page_body(configuration_t* cfg, std::vector<measurement_t>& m) {
+static void config_get_page_body(std::ostringstream* configPage, configuration_t* cfg, std::vector<measurement_t>& m) {
   String flip_screen = cfg->display_flip_screen == true ? "checked" : "";
-  String body_page = "<form action='/save'>";
-  body_page += "<label for='bt_name'>Bluetooth interface name</label><br>";
-  body_page += "<input type='text' id='bt_name' name='bt_name' value='" + cfg->bt_if_name + "' maxlength='32'><br>";
-  body_page += "<label for='bt_pin'>Pin</label><br>";
-  body_page += "<input type='text' id='bt_pin' name='bt_pin' value='" + cfg->bt_if_pin + "'><br>";
-  body_page += "<label for='buzzer_t'>Temperature threshold to activates the buzzer alarm.</label><br>";
-  body_page += "<input type='text' id='buzzer_t' name='buzzer_t' value='" + String(cfg->temperature_threshold) + "'><br>";
-  body_page += "<label for='d_flip'>Flip screen vertically</label><br>";
-  body_page += "<input type='checkbox' id='d_flip' name='d_flip' value='d_flip' " + flip_screen + " ><br><br>";
+  *configPage << "<form action='/save'>";
+  *configPage << "<label for='bt_name'>Bluetooth interface name</label><br>";
+  *configPage << "<input type='text' id='bt_name' name='bt_name' value='" << cfg->bt_if_name.c_str() << "' maxlength='32'><br>";
+  *configPage << "<label for='bt_pin'>Pin</label><br>";
+  *configPage << "<input type='text' id='bt_pin' name='bt_pin' value='" << cfg->bt_if_pin.c_str() << "'><br>";
+  *configPage << "<label for='buzzer_t'>Temperature threshold to activates the buzzer alarm.</label><br>";
+  *configPage << "<input type='text' id='buzzer_t' name='buzzer_t' value='" << cfg->temperature_threshold << "'><br>";
+  *configPage << "<label for='d_flip'>Flip screen vertically</label><br>";
+  *configPage << "<input type='checkbox' id='d_flip' name='d_flip' value='d_flip' " << flip_screen.c_str() << " ><br><br>";
 
   for (uint8_t msmIdx = 0; msmIdx < m.size(); msmIdx++) {
     String key = "m_" + String(m[msmIdx].id);
-    body_page += "<label><input type='checkbox' " + String(m[msmIdx].enabled == true ? "checked" : "") + " name='" + key + "' id='" + key + "' value='" + key + "'>" + String(m[msmIdx].caption) + "</label><br>";
+    *configPage << "<label><input type='checkbox' " << (m[msmIdx].enabled == true ? "checked" : "") << " name='" << key.c_str() << "' id='" << key.c_str() << "' value='" << key.c_str() << "'>" << m[msmIdx].caption << "</label><br>";
   }
 
-  body_page += "<input type='submit' value='Save'></form>";
-  body_page += "<br><br><br>";
-  body_page += "<form action='/remove'><input type='submit' value='Remove bonded devices'></form>";
-  return body_page;
+  *configPage << "<input type='submit' value='Save'></form>";
+  *configPage << "<br><br><br>";
+  *configPage << "<form action='/remove'><input type='submit' value='Remove bonded devices'></form>";
 }
 
-const char* config_get_page(configuration_t* cfg, std::vector<measurement_t>& m) {
-  if (!config_page.isEmpty()) {
-    config_page.clear();
-  }
-
-  config_page += config_get_page_header();
-  config_page += config_get_page_body(cfg, m);
-  config_page += config_get_page_footer();
-  return config_page.c_str();
+void config_get_page(std::ostringstream* configPage, configuration_t* cfg, std::vector<measurement_t>& m) {
+  config_get_page_header(configPage);
+  config_get_page_body(configPage, cfg, m);
+  config_get_page_footer(configPage);
 }
