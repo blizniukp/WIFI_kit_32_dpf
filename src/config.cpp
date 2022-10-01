@@ -127,8 +127,21 @@ bool config_save(configuration_t* cfg, std::vector<measurement_t>& m) {
 
 static void config_get_page_header(std::ostringstream* const configPage) {
   *configPage << R"rawliteral(<html>
+  <script type="text/javascript">
+        function EnableDisableTextBox(chkbx) {
+          switch (chkbx.id) {
+            case 'm_5': txtBox = document.getElementById("buzzer_t"); break;
+            default: return
+          }
+            txtBox.disabled = chkbx.checked ? false : true;
+            if (!txtBox.disabled) { txtBox.focus(); }
+        }
+        function SetTextBoxEnabled() {
+          EnableDisableTextBox(document.getElementById("m_5"))
+        }
+  </script>
 <meta name='viewport' content='width=device-width, initial-scale=1'>
-<body style='background-color:#161317; color: white'>)rawliteral";
+<body style='background-color:#161317; color: white' onload="SetTextBoxEnabled()">)rawliteral";
 }
 
 static void config_get_page_footer(std::ostringstream* const configPage) {
@@ -178,16 +191,22 @@ static void config_get_page_body(std::ostringstream* const configPage, configura
   *configPage << "<input type='text' id='bt_name' name='bt_name' value='" << cfg->bt_if_name.c_str() << "' maxlength='32'><br>";
   *configPage << "<label for='bt_pin'>Pin</label><br>";
   *configPage << "<input type='text' id='bt_pin' name='bt_pin' value='" << cfg->bt_if_pin.c_str() << "'><br>";
-  *configPage << "<label for='buzzer_t'>Temperature threshold to activates the buzzer alarm.</label><br>";
-  *configPage << "<input type='text' id='buzzer_t' name='buzzer_t' value='" << cfg->temperature_threshold << "'><br>";
   *configPage << "<label for='d_flip'>Flip screen vertically</label><br>";
   *configPage << "<input type='checkbox' id='d_flip' name='d_flip' value='d_flip' " << flip_screen.c_str() << " ><br><br>";
 
   for (uint8_t msmIdx = 0; msmIdx < m->size(); msmIdx++) {
     measurement_t* msm = &(*m)[msmIdx];
     String key = "m_" + String(msm->id);
-    *configPage << "<label><input type='checkbox' " << (msm->enabled == true ? "checked" : "") << " name='" << key.c_str() << "' id='" << key.c_str() << "' value='" << key.c_str() << "'>" << msm->caption << "</label><br>";
+    *configPage << "<label>";
+    *configPage << "<input type='checkbox' " << (msm->enabled == true ? "checked" : "") << " name='" << key.c_str() << "'";
+    *configPage << " id='" << key.c_str() << "' value='" << key.c_str() << "' " << (msm->dataReadFunPtr != NULL ? "onclick='EnableDisableTextBox(this)'" : "") << " >";
+    *configPage << msm->caption;
+    *configPage << "</label><br>";
   }
+
+  *configPage << "<br><br>";
+  *configPage << "<label for='buzzer_t'>Temperature threshold to activates the buzzer alarm.</label><br>";
+  *configPage << "<input type='text' id='buzzer_t' name='buzzer_t' value='" << cfg->temperature_threshold << "' disabled='disabled' ><br>";
 
   *configPage << "<input type='submit' value='Save'></form>";
   *configPage << "<br><br><br>";
