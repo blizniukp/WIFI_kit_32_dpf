@@ -6,6 +6,7 @@ static const uint8_t max_bt_response_time = 10; /*10 seconds*/
 static const uint8_t max_bt_paired_devices = 20;
 static const uint8_t remove_bonded_devices = 1;
 static const uint8_t rx_buffer_size = 128;
+static const uint32_t data_read_interval = 10000; /*10 seconds*/
 
 BluetoothSerial btSerial;
 SSD1306Wire* display;
@@ -232,13 +233,13 @@ void displayData(bool correctData, measurement_t* m) {
   Serial.println("========================");
 }
 
-void drawProgressBar() {
+void drawProgressBar(uint32_t delayProgress) {
   displayText(0, last_line, "[");
   displayText(100, last_line, "]");
 
   for (uint8_t columnIdx = 1; columnIdx < 100; columnIdx++) {
     displayText(columnIdx, last_line - 3, ".");
-    delay(50);
+    delay(delayProgress);
   }
 }
 
@@ -472,6 +473,7 @@ void loop() {
     return;
   }
 
+  uint32_t measureTime = millis();
   measurement_t* m = &measurements[measurementIdx];
   btSerialSendCommand(m->command);
   rxLen = btSerialReadAndAddToLog(rxData);
@@ -483,7 +485,12 @@ void loop() {
   Serial.println("Display data");
   displayData(correctData, m);
 
-  drawProgressBar();
+  uint32_t delayProgress = 0;
+  if ((millis() - measureTime) < data_read_interval) {
+    delayProgress = (data_read_interval - (millis() - measureTime)) / 100;
+  }
+  drawProgressBar(delayProgress);
+
   do {
     measurementIdx++;
     if (measurementIdx >= measurements.size() ||
