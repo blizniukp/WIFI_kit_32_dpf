@@ -22,18 +22,20 @@ uint8_t logLineNumber = 0;
 bool connectByName = true;
 
 void dataReadFun_Temperature(float value);
+void dataReadFun_SootLoad(float value);
 
 std::vector<measurement_t> measurements;
 configuration_t config;
 
 void initMeasurements(std::vector<measurement_t>& m) {
-  m.push_back((measurement_t) { 1, "Soot mass measured", "22114E1\r", "g", -100.0f, & calcFun_AB, 100.0f, true, NULL });
-  m.push_back((measurement_t) { 2, "Soot mass calculated", "22114F1\r", "g", -100.0f, & calcFun_AB, 100.0f, true, NULL });
-  m.push_back((measurement_t) { 3, "Distance since last regen.", "221156\r", "km", -100.0f, & calcFun_ABCD, 1000.0f, true, NULL });
-  m.push_back((measurement_t) { 4, "Time since last regen", "22115E\r", "min", -100.0f, & calcFun_ABCD, 60.0f, false, NULL });
-  m.push_back((measurement_t) { 5, "Input temperature", "2211B2\r", "*C", -100.0f, & calcFun_Temperature, 10.0f, true, & dataReadFun_Temperature });
-  m.push_back((measurement_t) { 6, "Output temperature", "2210F9\r", "*C", -100.0f, & calcFun_Temperature, 10.0f, false, NULL });
-  m.push_back((measurement_t) { 7, "Oil Ash Residue", "22178C\r", "g", -100.0f, & calcFun_AB, 10.0f, false, NULL });
+  m.push_back((measurement_t) { 1, "Soot mass measured", "22114E1\r", "g", -100.0f, & calcFun_AB, 100.0f, NULL, true, NULL });
+  m.push_back((measurement_t) { 2, "Soot mass calculated", "22114F1\r", "g", -100.0f, & calcFun_AB, 100.0f, NULL, true, NULL });
+  m.push_back((measurement_t) { 3, "Distance since last regen.", "221156\r", "km", -100.0f, & calcFun_ABCD, 1000.0f, NULL, true, NULL });
+  m.push_back((measurement_t) { 4, "Time since last regen", "22115E\r", "min", -100.0f, & calcFun_ABCD, 60.0f, NULL, true, NULL });
+  m.push_back((measurement_t) { 5, "Input temperature", "2211B2\r", "*C", -100.0f, & calcFun_Temperature, 10.0f, NULL, true, & dataReadFun_Temperature });
+  m.push_back((measurement_t) { 6, "Output temperature", "2210F9\r", "*C", -100.0f, & calcFun_Temperature, 10.0f, NULL, true, NULL });
+  m.push_back((measurement_t) { 7, "Oil Ash Residue", "22178C\r", "g", -100.0f, & calcFun_AB, 10.0f, NULL, true, NULL });
+  m.push_back((measurement_t) { 8, "Soot load (%)", "22114F1\r", "%", -100.0f, & calcFun_SootLoad, 100.0f, & config.max_soot_mass, true, & dataReadFun_SootLoad });
 #if DEBUG
   for (uint8_t msmIdx = 0; msmIdx < m.size(); msmIdx++) {
     Serial.printf("measurement[%d]: %s\n", m[msmIdx].id, m[msmIdx].caption);
@@ -212,6 +214,10 @@ void dataReadFun_Temperature(float value) {
   buzzer_set_temperature(value);
 }
 
+void dataReadFun_SootLoad(float value) {
+  buzzer_set_soot_load(value);
+}
+
 void displayData(bool correctData, measurement_t* m) {
   uint8_t xpos = 0, ypos = 0;
 
@@ -318,8 +324,11 @@ void handleSave(AsyncWebServerRequest* request) {
   if (request->hasParam(CFG_DISPLAY_FLIP_SCREEN)) {
     config.display_flip_screen = request->getParam(CFG_DISPLAY_FLIP_SCREEN)->value() == CFG_DISPLAY_FLIP_SCREEN ? true : false;
   }
-  if (request->hasParam(CFG_BUZZER_THRESHOLD)) {
-    config.temperature_threshold = request->getParam(CFG_BUZZER_THRESHOLD)->value().toFloat();
+  if (request->hasParam(CFG_PARAMS_THRESHOLD)) {
+    config.temperature_threshold = request->getParam(CFG_PARAMS_THRESHOLD)->value().toFloat();
+  }
+  if (request->hasParam(CFG_PARAMS_MAX_SHOOT)) {
+    config.max_soot_mass = request->getParam(CFG_PARAMS_MAX_SHOOT)->value().toFloat();
   }
 
   for (uint8_t msmIdx = 0; msmIdx < measurements.size(); msmIdx++) {
@@ -407,7 +416,7 @@ void setup() {
 
   addToLog("Enable buzzer");
   buzzer_init(BUZZER_PIN);
-  buzzer_set_threshold(config.temperature_threshold);
+  buzzer_set_temperature_threshold(config.temperature_threshold);
 
   addToLog("Setup bluetooth...");
   result = btSerial.begin(CFG_DEVICE_NAME_DEFAULT, true);
@@ -475,9 +484,13 @@ void loop() {
 
   uint32_t measureTime = millis();
   measurement_t* m = &measurements[measurementIdx];
+#ifdef RANDOM_DATA
+  rxLen = 0;
+#else
   btSerialSendCommand(m->command);
   rxLen = btSerialReadAndAddToLog(rxData);
-  bool correctData = m->calcFunPtr(rxData, rxLen, &m->value, m->divider);
+#endif
+  bool correctData = m->calcFunPtr(rxData, rxLen, &m->value, m->divider, m->calcFunParam);
   if (correctData && m->dataReadFunPtr) {
     m->dataReadFunPtr(m->value);
   }

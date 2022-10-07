@@ -50,11 +50,12 @@ void config_load(configuration_t* cfg, std::vector<measurement_t>& m) {
   }
   pref.end();
 
-  result = pref.begin(CFG_NAMESPACE_BUZZER, true);
+  result = pref.begin(CFG_NAMESPACE_PARAMS, true);
   if (!result) {
-    Serial.printf("Namespace %s not found. Use default values.\n", CFG_NAMESPACE_BUZZER);
+    Serial.printf("Namespace %s not found. Use default values.\n", CFG_NAMESPACE_PARAMS);
   }
-  cfg->temperature_threshold = pref.getFloat(CFG_BUZZER_THRESHOLD, CFG_BUZZER_THRESHOLD_DEFAULT);
+  cfg->temperature_threshold = pref.getFloat(CFG_PARAMS_THRESHOLD, CFG_PARAMS_THRESHOLD_DEFAULT);
+  cfg->max_soot_mass = pref.getFloat(CFG_PARAMS_MAX_SHOOT, CFG_PARAMS_MAX_SHOOT_DEFAULT);
   pref.end();
 
 #if DEBUG
@@ -71,8 +72,9 @@ void config_load(configuration_t* cfg, std::vector<measurement_t>& m) {
     Serial.print("m_" + String(m[msmIdx].id));
     Serial.printf(": %s\n", m[msmIdx].enabled == true ? "true" : "false");
   }
-  Serial.println("Buzzer:");
-  Serial.printf("%s: %.2f\n", CFG_BUZZER_THRESHOLD, cfg->temperature_threshold);
+  Serial.println("Params:");
+  Serial.printf("%s: %.2f\n", CFG_PARAMS_THRESHOLD, cfg->temperature_threshold);
+  Serial.printf("%s: %.2f\n", CFG_PARAMS_MAX_SHOOT, cfg->max_soot_mass);
 #endif
 }
 
@@ -114,12 +116,13 @@ bool config_save(configuration_t* cfg, std::vector<measurement_t>& m) {
   }
   pref.end();
 
-  result = pref.begin(CFG_NAMESPACE_BUZZER, false);
+  result = pref.begin(CFG_PARAMS_THRESHOLD, false);
   if (!result) {
-    Serial.printf("Can't open namespace: %s\n", CFG_NAMESPACE_BUZZER);
+    Serial.printf("Can't open namespace: %s\n", CFG_PARAMS_THRESHOLD);
     return false;
   }
-  pref.putFloat(CFG_BUZZER_THRESHOLD, cfg->temperature_threshold);
+  pref.putFloat(CFG_PARAMS_THRESHOLD, cfg->temperature_threshold);
+  pref.putFloat(CFG_PARAMS_MAX_SHOOT, cfg->max_soot_mass);
   pref.end();
 
   return true;
@@ -130,7 +133,8 @@ static void config_get_page_header(std::ostringstream* const configPage) {
   <script type="text/javascript">
         function EnableDisableTextBox(chkbx) {
           switch (chkbx.id) {
-            case 'm_5': txtBox = document.getElementById("buzzer_t"); break;
+            case 'm_5': txtBox = document.getElementById("temp_thr"); break;
+            case 'm_8': txtBox = document.getElementById("max_soot"); break;
             default: return
           }
             txtBox.disabled = chkbx.checked ? false : true;
@@ -138,6 +142,7 @@ static void config_get_page_header(std::ostringstream* const configPage) {
         }
         function SetTextBoxEnabled() {
           EnableDisableTextBox(document.getElementById("m_5"))
+          EnableDisableTextBox(document.getElementById("m_8"))
         }
   </script>
 <meta name='viewport' content='width=device-width, initial-scale=1'>
@@ -205,8 +210,10 @@ static void config_get_page_body(std::ostringstream* const configPage, configura
   }
 
   *configPage << "<br><br>";
-  *configPage << "<label for='buzzer_t'>Temperature threshold to activates the buzzer alarm.</label><br>";
-  *configPage << "<input type='text' id='buzzer_t' name='buzzer_t' value='" << cfg->temperature_threshold << "' disabled='disabled' ><br>";
+  *configPage << "<label for='temp_thr'>Temperature threshold to activates the buzzer alarm.</label><br>";
+  *configPage << "<input type='text' id='temp_thr' name='temp_thr' value='" << cfg->temperature_threshold << "' disabled='disabled' ><br>";
+  *configPage << "<label for='max_soot'>Maximum soot load (used to calculate the percentage)</label><br>";
+  *configPage << "<input type='text' id='max_soot' name='max_soot' value='" << cfg->max_soot_mass << "' disabled='disabled' ><br>";
 
   *configPage << "<input type='submit' value='Save'></form>";
   *configPage << "<br><br><br>";

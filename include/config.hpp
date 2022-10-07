@@ -28,10 +28,12 @@
 
 #define CFG_NAMESPACE_MEASUREMENTS "measurements"
 
-#define CFG_NAMESPACE_BUZZER "buzzer"
+#define CFG_NAMESPACE_PARAMS "params"
 #define BUZZER_PIN 12
-#define CFG_BUZZER_THRESHOLD "buzzer_t"
-#define CFG_BUZZER_THRESHOLD_DEFAULT 400.0f
+#define CFG_PARAMS_THRESHOLD "temp_thr"
+#define CFG_PARAMS_THRESHOLD_DEFAULT 400.0f
+#define CFG_PARAMS_MAX_SHOOT "max_soot"
+#define CFG_PARAMS_MAX_SHOOT_DEFAULT 27.0f
 
 typedef struct configuration_def {
     String wifi_ssid;   /* AP SSID */
@@ -43,6 +45,7 @@ typedef struct configuration_def {
     bool display_flip_screen; /* Flip the screen */
 
     float temperature_threshold; /*The temperature threshold that activates the buzzer alarm.*/
+    float max_soot_mass; /*Maximum value of "soot mass". Used to calculate the percentage value.*/
 } configuration_t;
 
 void config_init();

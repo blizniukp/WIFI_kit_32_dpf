@@ -39,7 +39,7 @@ bool isCanError(char* response) {
   return false;
 }
 
-bool calcFun_AB(char* data, size_t data_len, float* val, float divider) {
+bool calcFun_AB(char* data, size_t data_len, float* val, float divider, void* calcFunParam = NULL) {
 #ifdef RANDOM_DATA
   * val = ((random() % 100) + 1) / divider;
   return (bool)random() % 1;
@@ -52,7 +52,7 @@ bool calcFun_AB(char* data, size_t data_len, float* val, float divider) {
   return true;
 }
 
-bool calcFun_ABCD(char* data, size_t data_len, float* val, float divider) {
+bool calcFun_ABCD(char* data, size_t data_len, float* val, float divider, void* calcFunParam = NULL) {
 #ifdef RANDOM_DATA
   * val = ((random() % 100) + 1) / divider;
   return (bool)random() % 1;
@@ -65,7 +65,7 @@ bool calcFun_ABCD(char* data, size_t data_len, float* val, float divider) {
   return true;
 }
 
-bool calcFun_Temperature(char* data, size_t data_len, float* val, float divider) {
+bool calcFun_Temperature(char* data, size_t data_len, float* val, float divider, void* calcFunParam = NULL) {
 #ifdef RANDOM_DATA
   * val = ((random() % 100) + 1) / divider;
   return (bool)random() % 1;
@@ -75,5 +75,21 @@ bool calcFun_Temperature(char* data, size_t data_len, float* val, float divider)
     return false;
   }
   *val = ((((getByteFromData(data, data_len, 11) << 8) + (getByteFromData(data, data_len, 13))) - 2731) / divider);
+  return true;
+}
+
+bool calcFun_SootLoad(char* data, size_t data_len, float* val, float divider, void* calcFunParam = NULL) {
+#ifdef RANDOM_DATA
+  * val = ((random() % 3000) + 1) / divider;
+#else
+  if (isCanError(data)) {
+    *val = -100.0f;
+    return false;
+  }
+  *val = (((getByteFromData(data, data_len, 11) << 8) + (getByteFromData(data, data_len, 13))) / divider);
+#endif
+
+  float sootLoad = ((*val) / (*(float*)(calcFunParam)) * 100.0);
+  *val = sootLoad > 100.0f ? 100.0f : sootLoad;
   return true;
 }
