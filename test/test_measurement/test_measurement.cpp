@@ -83,7 +83,7 @@ void test_calcFun_AB_ShouldReturnFalse(void) {
   float value = 0.0f;
   float divider = 1.0f;
 
-  bool result = calcFun_AB(testData, testDataLen, &value, divider);
+  bool result = calcFun_AB(testData, testDataLen, &value, divider, NULL);
   TEST_ASSERT_FALSE(result);
   TEST_ASSERT_EQUAL_FLOAT(-100.0f, value);
 }
@@ -95,7 +95,7 @@ void test_calcFun_AB_ShouldReturnTrue(void) {
   float value = 0.0f;
   float divider = 1.0f;
 
-  bool result = calcFun_AB(testData, testDataLen, &value, divider);
+  bool result = calcFun_AB(testData, testDataLen, &value, divider, NULL);
   TEST_ASSERT_TRUE(result);
   TEST_ASSERT_EQUAL_FLOAT(315.0f, value);
 }
@@ -109,7 +109,7 @@ void test_calcFun_ABCD_ShouldReturnFalse(void) {
   float value = 0.0f;
   float divider = 1.0f;
 
-  bool result = calcFun_ABCD(testData, testDataLen, &value, divider);
+  bool result = calcFun_ABCD(testData, testDataLen, &value, divider, NULL);
   TEST_ASSERT_FALSE(result);
   TEST_ASSERT_EQUAL_FLOAT(-100.0f, value);
 }
@@ -121,7 +121,7 @@ void test_calcFun_ABCD_ShouldReturnTrue(void) {
   float value = 0.0f;
   float divider = 100.0f;
 
-  bool result = calcFun_ABCD(testData, testDataLen, &value, divider);
+  bool result = calcFun_ABCD(testData, testDataLen, &value, divider, NULL);
   TEST_ASSERT_TRUE(result);
   TEST_ASSERT_EQUAL_FLOAT(5726622.0f, value);
 }
@@ -135,7 +135,7 @@ void test_calcFun_Temperature_ShouldReturnFalse(void) {
   float value = 0.0f;
   float divider = 1.0f;
 
-  bool result = calcFun_Temperature(testData, testDataLen, &value, divider);
+  bool result = calcFun_Temperature(testData, testDataLen, &value, divider, NULL);
   TEST_ASSERT_FALSE(result);
   TEST_ASSERT_EQUAL_FLOAT(-100.0f, value);
 }
@@ -147,9 +147,52 @@ void test_calcFun_Temperature_ShouldReturnTrue(void) {
   float value = 0.0f;
   float divider = 100.0f;
 
-  bool result = calcFun_Temperature(testData, testDataLen, &value, divider);
+  bool result = calcFun_Temperature(testData, testDataLen, &value, divider, NULL);
   TEST_ASSERT_TRUE(result);
   TEST_ASSERT_EQUAL_FLOAT(60.07f, value);
+}
+#pragma endregion
+
+#pragma region calcFun_SootLoad
+void test_calcFun_SootLoad_ShouldReturnFalse(void) {
+  char testData[] = "SEARCHING";
+  size_t testDataLen = strlen(testData);
+  uint8_t index = 2;
+  float value = 0.0f;
+  float divider = 1.0f;
+  float param = 27.0f;
+
+  bool result = calcFun_SootLoad(testData, testDataLen, &value, divider, &param);
+  TEST_ASSERT_FALSE(result);
+  TEST_ASSERT_EQUAL_FLOAT(-100.0f, value);
+}
+
+void test_calcFun_SootLoad_ShouldReturnTrueAnd100(void) {
+  char testData[] = "222222222222222222";
+  size_t testDataLen = strlen(testData);
+  uint8_t index = 2;
+  float value = 0.0f;
+  float divider = 100.0f;
+  float param = 27.0f;
+
+  bool result = calcFun_SootLoad(testData, testDataLen, &value, divider, &param);
+  TEST_ASSERT_TRUE(result);
+  TEST_ASSERT_EQUAL_FLOAT(100.0f, value);
+}
+
+void test_calcFun_SootLoad_ShouldReturnTrueAnd50(void) {
+  /*                 01234567890123456    */
+  /*                            HHLL      */
+  char testData[] = "000000000000546000000";
+  size_t testDataLen = strlen(testData);
+  uint8_t index = 2;
+  float value = 0.0f;
+  float divider = 100.0f;
+  float param = 27.0f;
+
+  bool result = calcFun_SootLoad(testData, testDataLen, &value, divider, &param);
+  TEST_ASSERT_TRUE(result);
+  TEST_ASSERT_EQUAL_FLOAT(50.0f, value);
 }
 #pragma endregion
 
@@ -174,6 +217,10 @@ void RUN_UNITY_TESTS() {
 
   RUN_TEST(test_calcFun_Temperature_ShouldReturnFalse);
   RUN_TEST(test_calcFun_Temperature_ShouldReturnTrue);
+
+  RUN_TEST(test_calcFun_SootLoad_ShouldReturnFalse);
+  RUN_TEST(test_calcFun_SootLoad_ShouldReturnTrueAnd100);
+  RUN_TEST(test_calcFun_SootLoad_ShouldReturnTrueAnd50);
   UNITY_END();
 }
 
