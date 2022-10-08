@@ -48,13 +48,14 @@ The device connects to the OBD interface via Bluetooth and displays DPF status i
 
 The following parameters are displayed:
 
-* Soot mass measured (smm)
-* Soot mass calculated (smc)
-* Distance since last regeneration (dslr)
-* Time since last regeneration (tslr)
-* Oil Ash Residue (oar)
-* Input temperature (itemp)
-* Output temperature (otemp)
+* Soot mass measured
+* Soot mass calculated
+* Distance since last regeneration
+* Time since last regeneration
+* Oil Ash Residue
+* Input temperature
+* Output temperature
+* Soot load (%)
 
 
 The data is refreshed every 10 seconds. On the right side of the display, a correct `V` or incorrect `X` reading of a given parameter is marked.
@@ -85,7 +86,13 @@ The board selection is made in the `platformio.ini` file by leaving one of the o
 ;-DWEMOS_BOARD
 ```
 
-Optionally, you can add a buzzer (with a generator) that informs you when the DPF regeneration starts and stops. The buzzer should be connected between the GND and D12 pins.
+Optionally, you can add a buzzer (with a generator) that informs you when:
+- the DPF regeneration starts and stops
+- after exceeding 80% filter fill
+
+The buzzer should be connected between the GND and D12 pins.
+
+![buzzer](/docs/buzzer.png)
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
@@ -138,6 +145,12 @@ After connecting and accessing the 192.168.4.1 address, we have the ability to p
 
 The 'Remove bonded devices' button starts the procedure for removing paired Bluetooth devices on the ESP32 module.
 This is useful when a connection error occurs. And the problem occurs when you connect to the OBD interface from your phone, and then want to connect again using the device.
+
+The `Temperature threshold to activates the buzzer alarm` field is active only when the `Input temperature` reading option is selected.
+The default value is 400. The hysteresis is 10°C. Thus, the buzzer will turn on when the input temperature exceeds 410°C, and turn off when the input temperature decreases below 390°C.
+
+The `Maximum soot load (used to calculate the percentage)` field is active only when the `Soot load (%)` option is checked. The default value is 80% full. The hysteresis is 1%.
+The buzzer alarm is triggered when the filter exceeds 79% full and is played only once.
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 

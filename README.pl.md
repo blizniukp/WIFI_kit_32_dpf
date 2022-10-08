@@ -48,13 +48,14 @@ Urządznie łączy się z interfejsem OBD po Bluetooth i wyświetla informacje o
 
 Wyświetlane są następujące parametry:
 
-* Zmierzona masa sadzy (smm)
-* Wyliczona masa sadzy (smc)
-* Dystans od ostatniej regeneracji (dslr)
-* Czas od ostatniej regeneracji (tslr)
-* Pozostałość popiołu olejowego (oar)
-* Temperatura wejściowa (itemp)
-* Temperatura wyjściowa (otemp)
+* Zmierzona masa sadzy (Soot mass measured)
+* Wyliczona masa sadzy (Soot mass calculated)
+* Dystans od ostatniej regeneracji (Distance since last regeneration)
+* Czas od ostatniej regeneracji (Time since last regeneration)
+* Pozostałość popiołu olejowego (Oil Ash Residue)
+* Temperatura wejściowa (Input temperature)
+* Temperatura wyjściowa (Output temperature)
+* Procentowa wartość zapełnienia filtra (Soot load (%))
 
 
 Dane odświeżane są co 10 sekund. Po prawej stronie wyświetlacza zaznaczany jest prawidłowy `V` lub nieprawidłowy `X` odczyt danego parametru.
@@ -85,7 +86,13 @@ Wyboru płytki dokonujemy w pliku `platformio.ini` pozostawiając odkomentowaną
 ;-DWEMOS_BOARD
 ```
 
-Opcjonalnie można dodać buzzer (z generatorem) który informuje o momencie rozpoczęcia oraz zakończenia wypalania DPF. Buzzer należy wpiąc pomiędzy pin GND oraz D12.
+Opcjonalnie można dodać buzzer (z generatorem) który informuje o:
+- momencie rozpoczęcia oraz zakończenia wypalania DPF
+- przekroczeniu progu 80% zapełnienia filtra
+
+Buzzer należy wpiąc pomiędzy pin GND oraz D12.
+
+![buzzer](/docs/buzzer.png)
 
 <p align="right">(<a href="#top">powrót do góry</a>)</p>
 
@@ -138,6 +145,12 @@ Po połączeniu się i wejściu na adres 192.168.4.1 mamy możliwość podejrzen
 
 Przycisk 'Remove bonded devices' rozpoczyna procedurę usunięcia sparowanych urządzeń Bluetooth w module ESP32.
 Jest to przydatne w momencie występienia błędu podczas łączenia. A problem pojawia się, gdy do interfejsu OBD połączymy się z telefonu, a następnie ponownie chcemy połączyć się za pomocą urządzenia.
+
+Pole `Temperature threshold to activates the buzzer alarm.` (Próg temperatury po którym załączany jest alarm) jest aktywne dopiero po zaznaczeniu opcji odczytu Temperatury wejściowej `Input temperature`.
+Wartość domyślna to 400. Histereza wynosi 10°C. Zatem załączenie buzzera nastąpi po przekroczeniu 410°C, a jego wyłączenie gdy temperatura wejściowa spadnie poniżej 390°C.
+
+Pole `Maximum soot load (used to calculate the percentage)` (Maksymalna wartość sadzy - wyliczonej. (używana do wyliczania procentowej wartości zapełnienia filtra)) jest aktywne dopiero po zaznaczeniu opcji `Soot load (%)`. Wartość domyślna to 80% zapełnienia. Histereza wynosi 1%.
+Alarm z buzzera uruchamia się po przekroczeniu 79% zapełnienia filtra i jest odtwarzany tylko raz.
 
 <p align="right">(<a href="#top">powrót do góry</a>)</p>
 
