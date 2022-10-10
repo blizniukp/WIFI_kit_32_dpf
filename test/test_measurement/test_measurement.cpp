@@ -79,7 +79,6 @@ void test_getByteFromData_IncorectDataLenShouldReturn0(void) {
 void test_calcFun_AB_ShouldReturnFalse(void) {
   char testData[] = "SEARCHING";
   size_t testDataLen = strlen(testData);
-  uint8_t index = 2;
   float value = 0.0f;
   float divider = 1.0f;
 
@@ -91,7 +90,6 @@ void test_calcFun_AB_ShouldReturnFalse(void) {
 void test_calcFun_AB_ShouldReturnTrue(void) {
   char testData[] = "7E80562114E013B";
   size_t testDataLen = strlen(testData);
-  uint8_t index = 2;
   float value = 0.0f;
   float divider = 1.0f;
 
@@ -99,13 +97,36 @@ void test_calcFun_AB_ShouldReturnTrue(void) {
   TEST_ASSERT_TRUE(result);
   TEST_ASSERT_EQUAL_FLOAT(315.0f, value);
 }
+
+void test_calcFun_AB_ShouldReturnMinusOne(void) {
+  /*                            HHLL   */
+  char testData[] = "00000000000FFFF000";
+  size_t testDataLen = strlen(testData);
+  float value = 0.0f;
+  float divider = 1.0f;
+
+  bool result = calcFun_AB(testData, testDataLen, &value, divider, NULL);
+  TEST_ASSERT_TRUE(result);
+  TEST_ASSERT_EQUAL_FLOAT(-1.0f, value);
+}
+
+void test_calcFun_AB_ShouldReturnMinusTen(void) {
+  /*                            HHLL   */
+  char testData[] = "00000000000FFF6000";
+  size_t testDataLen = strlen(testData);
+  float value = 0.0f;
+  float divider = 1.0f;
+
+  bool result = calcFun_AB(testData, testDataLen, &value, divider, NULL);
+  TEST_ASSERT_TRUE(result);
+  TEST_ASSERT_EQUAL_FLOAT(-10.0f, value);
+}
 #pragma endregion
 
 #pragma region calcFun_ABCD
 void test_calcFun_ABCD_ShouldReturnFalse(void) {
   char testData[] = "SEARCHING";
   size_t testDataLen = strlen(testData);
-  uint8_t index = 2;
   float value = 0.0f;
   float divider = 1.0f;
 
@@ -117,7 +138,6 @@ void test_calcFun_ABCD_ShouldReturnFalse(void) {
 void test_calcFun_ABCD_ShouldReturnTrue(void) {
   char testData[] = "222222222222222222";
   size_t testDataLen = strlen(testData);
-  uint8_t index = 2;
   float value = 0.0f;
   float divider = 100.0f;
 
@@ -131,7 +151,6 @@ void test_calcFun_ABCD_ShouldReturnTrue(void) {
 void test_calcFun_Temperature_ShouldReturnFalse(void) {
   char testData[] = "SEARCHING";
   size_t testDataLen = strlen(testData);
-  uint8_t index = 2;
   float value = 0.0f;
   float divider = 1.0f;
 
@@ -143,7 +162,6 @@ void test_calcFun_Temperature_ShouldReturnFalse(void) {
 void test_calcFun_Temperature_ShouldReturnTrue(void) {
   char testData[] = "222222222222222222";
   size_t testDataLen = strlen(testData);
-  uint8_t index = 2;
   float value = 0.0f;
   float divider = 100.0f;
 
@@ -157,7 +175,6 @@ void test_calcFun_Temperature_ShouldReturnTrue(void) {
 void test_calcFun_SootLoad_ShouldReturnFalse(void) {
   char testData[] = "SEARCHING";
   size_t testDataLen = strlen(testData);
-  uint8_t index = 2;
   float value = 0.0f;
   float divider = 1.0f;
   float param = 27.0f;
@@ -170,7 +187,6 @@ void test_calcFun_SootLoad_ShouldReturnFalse(void) {
 void test_calcFun_SootLoad_ShouldReturnTrueAnd100(void) {
   char testData[] = "222222222222222222";
   size_t testDataLen = strlen(testData);
-  uint8_t index = 2;
   float value = 0.0f;
   float divider = 100.0f;
   float param = 27.0f;
@@ -185,7 +201,6 @@ void test_calcFun_SootLoad_ShouldReturnTrueAnd50(void) {
   /*                            HHLL      */
   char testData[] = "000000000000546000000";
   size_t testDataLen = strlen(testData);
-  uint8_t index = 2;
   float value = 0.0f;
   float divider = 100.0f;
   float param = 27.0f;
@@ -211,6 +226,8 @@ void RUN_UNITY_TESTS() {
 
   RUN_TEST(test_calcFun_AB_ShouldReturnFalse);
   RUN_TEST(test_calcFun_AB_ShouldReturnTrue);
+  RUN_TEST(test_calcFun_AB_ShouldReturnMinusOne);
+  RUN_TEST(test_calcFun_AB_ShouldReturnMinusTen);
 
   RUN_TEST(test_calcFun_ABCD_ShouldReturnFalse);
   RUN_TEST(test_calcFun_ABCD_ShouldReturnTrue);

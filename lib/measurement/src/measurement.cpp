@@ -48,7 +48,16 @@ bool calcFun_AB(char* data, size_t data_len, float* val, float divider, void* ca
     *val = -100.0f;
     return false;
   }
-  *val = (((getByteFromData(data, data_len, 11) << 8) + (getByteFromData(data, data_len, 13))) / divider);
+
+  int32_t tmp_value = ((getByteFromData(data, data_len, 11) << 8) + (getByteFromData(data, data_len, 13)));
+
+  if (tmp_value & 0x8000) {
+    tmp_value = tmp_value - 0xFFFF;
+    tmp_value--;
+  }
+
+  *val = tmp_value / divider;
+
   return true;
 }
 
