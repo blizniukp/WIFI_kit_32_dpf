@@ -90,15 +90,28 @@ bool calcFun_Temperature(char* data, size_t data_len, float* val, float divider,
 bool calcFun_SootLoad(char* data, size_t data_len, float* val, float divider, void* calcFunParam = NULL) {
 #ifdef RANDOM_DATA
   * val = ((random() % 3000) + 1) / divider;
+  if (random(0, 10) <= 2) *val = -(*val);
 #else
   if (isCanError(data)) {
     *val = -100.0f;
     return false;
   }
-  *val = (((getByteFromData(data, data_len, 11) << 8) + (getByteFromData(data, data_len, 13))) / divider);
+  int32_t tmp_value = ((getByteFromData(data, data_len, 11) << 8) + (getByteFromData(data, data_len, 13)));
+
+  if (tmp_value & 0x8000) {
+    tmp_value = tmp_value - 0xFFFF;
+    tmp_value--;
+  }
+
+  *val = tmp_value / divider;
+
+  if (*val < 0.0f) {
+    *val = 0.0f;
+    return true;
+  }
 #endif
 
   float sootLoad = ((*val) / (*(float*)(calcFunParam)) * 100.0);
-  *val = sootLoad > 100.0f ? 100.0f : sootLoad;
+  *val = sootLoad > 100.0f ? 100.0f : sootLoad < 0.0f ? 0.0f : sootLoad;
   return true;
 }
