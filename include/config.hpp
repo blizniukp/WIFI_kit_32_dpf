@@ -33,7 +33,7 @@
 #define CFG_PARAMS_THRESHOLD "temp_thr"
 #define CFG_PARAMS_THRESHOLD_DEFAULT 400.0f
 #define CFG_PARAMS_MAX_SHOOT "max_soot"
-#define CFG_PARAMS_MAX_SHOOT_DEFAULT 27.0f
+#define CFG_PARAMS_MAX_SHOOT_DEFAULT 21.0f
 
 typedef struct configuration_def {
     String wifi_ssid;   /* AP SSID */
