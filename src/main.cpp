@@ -35,7 +35,7 @@ void initMeasurements(std::vector<measurement_t>& m) {
   m.push_back((measurement_t) { 5, "Input temperature", "2211B2\r", "*C", -100.0f, & calcFun_Temperature, 10.0f, NULL, true, & dataReadFun_Temperature });
   m.push_back((measurement_t) { 6, "Output temperature", "2210F9\r", "*C", -100.0f, & calcFun_Temperature, 10.0f, NULL, true, NULL });
   m.push_back((measurement_t) { 7, "Oil Ash Residue", "22178C\r", "g", -100.0f, & calcFun_AB, 10.0f, NULL, true, NULL });
-  m.push_back((measurement_t) { 8, "Soot load (%)", "22114F1\r", "%", -100.0f, & calcFun_SootLoad, 100.0f, & config.max_soot_mass, true, & dataReadFun_SootLoad });
+  m.push_back((measurement_t) { 8, "Soot load (%)", "22114E1\r", "%", -100.0f, & calcFun_SootLoad, 100.0f, & config.max_soot_mass, true, & dataReadFun_SootLoad });
 #if DEBUG
   for (uint8_t msmIdx = 0; msmIdx < m.size(); msmIdx++) {
     Serial.printf("measurement[%d]: %s\n", m[msmIdx].id, m[msmIdx].caption);
