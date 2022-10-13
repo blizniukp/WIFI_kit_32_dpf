@@ -475,6 +475,7 @@ void loop() {
     addToLog("Connected");
     btSerialInit(rxData);
     measurementIdx = 0;
+    clearDisplay();
   }
 
   if (!connected) {
