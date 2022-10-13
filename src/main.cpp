@@ -6,7 +6,7 @@ static const uint8_t max_bt_response_time = 10; /*10 seconds*/
 static const uint8_t max_bt_paired_devices = 20;
 static const uint8_t remove_bonded_devices = 1;
 static const uint8_t rx_buffer_size = 128;
-static const uint32_t data_read_interval = 10000; /*10 seconds*/
+static const uint32_t data_read_interval = 5000; /*5 seconds*/
 
 BluetoothSerial btSerial;
 SSD1306Wire* display;
