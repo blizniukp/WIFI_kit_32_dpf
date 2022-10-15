@@ -80,9 +80,13 @@ Below is a list with cars with which this device works (has been tested) or can 
 |  VW    |  Golf 7 1.6 |  2009  |     CLHA      | :white_check_mark: | :grey_question:      | :grey_question:            | :grey_question:       | :grey_question:    | :grey_question:    | :white_check_mark: | :white_check_mark: | https://forums.tdiclub.com/index.php?threads/reading-soot-level-with-torque.464119/page-5 |
 |  VW    |  T6         |  2016  |     unknown   | :white_check_mark: | :white_check_mark:   | :white_check_mark:         | :white_check_mark:    | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | https://www.t6forum.com/threads/vw-t6-custom-pid-codes-for-dpf.33964/ |
 
+
 :heavy_check_mark: - Tested + works
+
 :white_check_mark: - Not tested but should work
+
 :grey_question: - Not tested
+
 :heavy_multiplication_x: - Not working
 
 <p align="right">(<a href="#top">back to top</a>)</p>
