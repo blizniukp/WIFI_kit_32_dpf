@@ -28,6 +28,7 @@
   <summary>Spis treści</summary>
   <ol>
     <li><a href="#o-projekcie">O projekcie</a></li>
+    <li><a href="#obslugiwane-samochody">Obsługiwane samochody</a></li>
     <li><a href="#sprzęt">Sprzęt</a></li>
     <li><a href="#wgrywanie-firmware-do-urządzenia">Wgrywanie firmware do urządzenia</a></li>
     <li><a href="#konfiguracja-urządzenia">Konfiguracja urządzenia</a></li>
@@ -58,7 +59,7 @@ Wyświetlane są następujące parametry:
 * Procentowa wartość zapełnienia filtra (Soot load (%))
 
 
-Dane odświeżane są co 10 sekund. Po prawej stronie wyświetlacza zaznaczany jest prawidłowy `V` lub nieprawidłowy `X` odczyt danego parametru.
+Dane odświeżane są co 5 sekund. Po prawej stronie wyświetlacza zaznaczany jest prawidłowy `V` lub nieprawidłowy `X` odczyt danego parametru.
 Na dole wyświetlany jest pasek postępu który odlicza czas do odpytania o kolejny parametr.
 
 Każdy z odczytywanych parametrów można włączyć lub wyłączyć.
@@ -66,6 +67,23 @@ Każdy z odczytywanych parametrów można włączyć lub wyłączyć.
 Urządzenie testowałem tylko z interfejsem iCar2 Vgate, ale podejrzewam, że może działać w oparciu o dowolny interfejs z ELM 327.
 
 Bazowałem na projekcie https://github.com/yangosoft/dpf
+
+<p align="right">(<a href="#top">powrót do góry</a>)</p>
+
+## Obsługiwane samochody
+
+Poniżej znajduje się lista z autami z którymi działa (zostało przetestowane) lub może działać (wymaga przetestowania) to urządzenie.
+
+|  Make  |  Model      |  Year  | Engine number | Soot mass measured | Soot mass calculated | Distance since last regen. | Time since last regen | Input temperature  | Output temperature | Oil Ash Residue    | Soot load (%)      |  Link         |
+| ------ | ----------- | ------ | ------------- | ------------------ | -------------------- | -------------------------- | --------------------- | -----------------  | ------------------ | ---------------    | -------------      | ------------- |
+|  Audi  |  A4 B8 2.0  |  2009  |     CAGA      | :heavy_check_mark: | :heavy_check_mark:   | :heavy_check_mark:         | :heavy_check_mark:    | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |     -         |
+|  VW    |  Golf 7 1.6 |  2009  |     CLHA      | :white_check_mark: | :grey_question:      | :grey_question:            | :grey_question:       | :grey_question:    | :grey_question:    | :white_check_mark: | :white_check_mark: | https://forums.tdiclub.com/index.php?threads/reading-soot-level-with-torque.464119/page-5 |
+|  VW    |  T6         |  2016  |     unknown   | :white_check_mark: | :white_check_mark:   | :white_check_mark:         | :white_check_mark:    | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | https://www.t6forum.com/threads/vw-t6-custom-pid-codes-for-dpf.33964/ |
+
+:heavy_check_mark: - Tested + works
+:white_check_mark: - Not tested but should work
+:grey_question: - Not tested
+:heavy_multiplication_x: - Not working
 
 <p align="right">(<a href="#top">powrót do góry</a>)</p>
 
@@ -147,7 +165,7 @@ Przycisk 'Remove bonded devices' rozpoczyna procedurę usunięcia sparowanych ur
 Jest to przydatne w momencie występienia błędu podczas łączenia. A problem pojawia się, gdy do interfejsu OBD połączymy się z telefonu, a następnie ponownie chcemy połączyć się za pomocą urządzenia.
 
 Pole `Temperature threshold to activates the buzzer alarm.` (Próg temperatury po którym załączany jest alarm) jest aktywne dopiero po zaznaczeniu opcji odczytu Temperatury wejściowej `Input temperature`.
-Wartość domyślna to 400. Histereza wynosi 10°C. Zatem załączenie buzzera nastąpi po przekroczeniu 410°C, a jego wyłączenie gdy temperatura wejściowa spadnie poniżej 390°C.
+Wartość domyślna to 420. Histereza wynosi 10°C. Zatem załączenie buzzera nastąpi po przekroczeniu 410°C, a jego wyłączenie gdy temperatura wejściowa spadnie poniżej 390°C.
 
 Pole `Maximum soot load (used to calculate the percentage)` (Maksymalna wartość sadzy - wyliczonej. (używana do wyliczania procentowej wartości zapełnienia filtra)) jest aktywne dopiero po zaznaczeniu opcji `Soot load (%)`. Wartość domyślna to 80% zapełnienia. Histereza wynosi 1%.
 Alarm z buzzera uruchamia się po przekroczeniu 79% zapełnienia filtra i jest odtwarzany tylko raz.
