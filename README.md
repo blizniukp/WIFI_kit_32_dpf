@@ -34,6 +34,7 @@
     <li><a href="#device-configuration">Device configuration</a></li>
     <li><a href="#roadmap">Roadmap</a></li>
     <li><a href="#license">License</a></li>
+    <li><a href="#useful-links">Useful links</a></li>
   </ol>
 </details>
 
@@ -196,6 +197,11 @@ See [LICENSE](LICENSE) for more information.
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
+## Useful links
+
+https://www.uk-mkivs.net/threads/dpf-regeneration-information-must-read-for-all-drivers-of-dpf-equipped-cars.31023/
+
+<p align="right">(<a href="#top">back to top</a>)</p>
 
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->

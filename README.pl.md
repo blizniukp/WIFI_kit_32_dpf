@@ -34,6 +34,7 @@
     <li><a href="#konfiguracja-urządzenia">Konfiguracja urządzenia</a></li>
     <li><a href="#plan-rozwoju">Plan rozwoju</a></li>
     <li><a href="#licencja">Licencja</a></li>
+    <li><a href="#przydatne-linki">Przydatne linki</a></li>
   </ol>
 </details>
 
@@ -196,6 +197,12 @@ Zerknij do pliku [LICENSE](LICENSE) aby poznać szczegóły.
 
 <p align="right">(<a href="#top">powrót do góry</a>)</p>
 
+
+## Przydatne linki
+
+https://www.uk-mkivs.net/threads/dpf-regeneration-information-must-read-for-all-drivers-of-dpf-equipped-cars.31023/
+
+<p align="right">(<a href="#top">powrót do góry</a>)</p>
 
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
