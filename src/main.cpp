@@ -350,9 +350,9 @@ void handleSave(AsyncWebServerRequest* request) {
 
 void initWebserver() {
   WiFi.softAP(config.wifi_ssid.c_str(), config.wifi_passwd.c_str());
-  IPAddress myIP = WiFi.softAPIP();
+  IPAddress apIP = WiFi.softAPIP();
   addToLog("AP IP address: ");
-  addToLog(myIP.toString());
+  addToLog(apIP.toString());
   server.on("/", HTTP_GET, handleRoot);
   server.on("/remove", HTTP_GET, handleRemove);
   server.on("/save", HTTP_GET, handleSave);
@@ -418,6 +418,10 @@ void setup() {
   buzzer_init(BUZZER_PIN);
   buzzer_set_temperature_threshold(config.temperature_threshold);
 
+#ifdef ENABLE_WIFI
+  initWebserver();
+#endif
+
   addToLog("Setup bluetooth...");
   result = btSerial.begin(CFG_DEVICE_NAME_DEFAULT, true);
   addResultToLog(result);
@@ -435,10 +439,6 @@ void setup() {
   addToLog("Is bluetooth ready ...");
   result = btSerial.isReady(true, 0);
   addResultToLog(result);
-
-#ifdef ENABLE_WIFI
-  initWebserver();
-#endif
 
 #ifdef RANDOM_DATA
   connected = true;
@@ -463,7 +463,12 @@ void loop() {
 
   if (!connected) {
     clearDisplay();
-
+    
+#ifdef ENABLE_WIFI
+  IPAddress apIP = WiFi.softAPIP();
+  addToLog("AP IP address: ");
+  addToLog(apIP.toString());
+#endif
     connected = connect();
     addResultToLog(connected);
 
