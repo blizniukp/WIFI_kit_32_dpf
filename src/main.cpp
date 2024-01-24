@@ -412,6 +412,7 @@ void setup() {
 
   if (config.display_flip_screen) {
     display->flipScreenVertically();
+    display->clear();
   }
 
   addToLog("Enable buzzer");
@@ -463,7 +464,7 @@ void loop() {
 
   if (!connected) {
     clearDisplay();
-    
+
 #ifdef ENABLE_WIFI
   IPAddress apIP = WiFi.softAPIP();
   addToLog("AP IP address: ");
