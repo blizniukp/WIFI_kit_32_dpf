@@ -32,8 +32,8 @@
 #define RST_OLED 16
 #endif
 #ifdef DIYMORE_BOARD
-#define SDA_OLED 11
-#define SCL_OLED 14
+#define SDA_OLED 21
+#define SCL_OLED 22
 #define RST_OLED -1
 #endif
 
