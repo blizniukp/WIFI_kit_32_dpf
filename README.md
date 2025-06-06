@@ -96,17 +96,21 @@ Below is a list with cars with which this device works (has been tested) or can 
 
 The project was to be as uncomplicated as possible, so I was looking for a board with an ESP32 module with the display already built in.
 
-I found two solutions for my project:
-* WIFI_kit_32 
-* WeMos Lolin32 OLED
+The code is prepared for the following ready-made modules:
 
-The program is prepared for both versions.
+* WIFI_kit_32 
+* WeMos Lolin32 OLED.
+* Diymore esp32 OLED
+
 
 The board selection is made in the `platformio.ini` file by leaving one of the options uncommented:
 
+There are 3 ready-made configurations defined in the `platformio.ini` file. Each of them sets the corresponding compilation flag:
+
 ```
--DWIFI_KIT_32_BOARD
+;-DWIFI_KIT_32_BOARD
 ;-DWEMOS_BOARD
+;-DDIYMORE_BOARD
 ```
 
 Optionally, you can add a buzzer (with a generator) that informs you when:
