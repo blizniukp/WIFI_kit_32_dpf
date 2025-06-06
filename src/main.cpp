@@ -258,7 +258,7 @@ void onEvent(AsyncWebSocket* server, AsyncWebSocketClient* client, AwsEventType 
 void handleRoot(AsyncWebServerRequest* request) {
     std::ostringstream configPage;
     config_get_page(&configPage, &config, &measurements);
-    request->send_P(200, "text/html", configPage.str().c_str());
+    request->send(200, "text/html", configPage.str().c_str());
 }
 
 bool initBluetooth() {
@@ -298,7 +298,7 @@ void handleRemove(AsyncWebServerRequest* request) {
     removeBondedDevices = true;
     std::ostringstream configPage;
     config_get_page(&configPage, &config, &measurements);
-    request->send_P(200, "text/html", configPage.str().c_str());
+    request->send(200, "text/html", configPage.str().c_str());
 }
 
 void handleSave(AsyncWebServerRequest* request) {
