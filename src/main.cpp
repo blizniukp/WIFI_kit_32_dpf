@@ -11,10 +11,8 @@ static const uint32_t data_read_interval = 5000; /*5 seconds*/
 BluetoothSerial btSerial;
 SSD1306Wire* display;
 
-#ifdef ENABLE_WIFI
 AsyncWebServer server(80);
 AsyncWebSocket ws("/ws");
-#endif
 
 bool connected = false;
 bool removeBondedDevices = false;
@@ -144,11 +142,10 @@ size_t btSerialRead(char* buffer, uint16_t timeout = 1500) {
     } while (c != '>');
     buffer[data_len + 1] = '\0';
 
-#ifdef ENABLE_WIFI
     ws.textAll("R:");
     ws.textAll(buffer);
     ws.textAll("\n");
-#endif
+
     return data_len;
 }
 
@@ -162,11 +159,10 @@ void btSerialSendCommand(String command) {
     btSerial.flush();
     addBtCommandToSerialLog(command);
     btSerial.print(command);
-#ifdef ENABLE_WIFI
+
     ws.textAll("W:");
     ws.textAll(command.c_str(), command.length());
     ws.textAll("\n");
-#endif
 }
 
 void btSerialInit(char* buffer) {
@@ -242,7 +238,6 @@ void drawProgressBar(uint32_t delayProgress) {
     }
 }
 
-#ifdef ENABLE_WIFI
 #ifdef DEBUG
 void onEvent(AsyncWebSocket* server, AsyncWebSocketClient* client, AwsEventType type, void* arg, uint8_t* data, size_t len) {
     switch (type) {
@@ -354,7 +349,6 @@ void initWebserver() {
     server.addHandler(&ws);
     server.begin();
 }
-#endif
 
 void deleteBondedDevices() {
     char bdaStr[18];
@@ -409,9 +403,7 @@ void setup() {
     buzzer_init(BUZZER_PIN);
     buzzer_set_temperature_threshold(config.temperature_threshold);
 
-#ifdef ENABLE_WIFI
     initWebserver();
-#endif
 
     addToLog("Setup bluetooth...");
     result = btSerial.begin(CFG_DEVICE_NAME_DEFAULT, true);
@@ -441,25 +433,22 @@ void loop() {
     char rxData[rx_buffer_size];
     size_t rxLen = 0;
 
-#ifdef ENABLE_WIFI
     ws.cleanupClients();
 
     if (removeBondedDevices) {
         removeBondedDevices = false;
         deleteBondedDevices();
     }
-#endif
 
     printDeviceStatus();
 
     if (!connected) {
         clearDisplay();
 
-#ifdef ENABLE_WIFI
         IPAddress apIP = WiFi.softAPIP();
         addToLog("AP IP address: ");
         addToLog(apIP.toString());
-#endif
+
         connected = connect();
         addResultToLog(connected);
 
