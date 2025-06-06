@@ -96,17 +96,18 @@ Poniżej znajduje się lista z autami z którymi działa (zostało przetestowane
 
 Projekt miał być jak najmniej skomplikowany, dlatego szukałem płytki z modułem ESP32 z już wbudowanym wyświetlaczem.
 
-Znalazłem dwa rozwiązania do swojego projektu:
+Kod jest przygotowany pod następujące gotowe moduły:
+
 * WIFI_kit_32 
 * WeMos Lolin32 OLED
+* Diymore esp32 OLED
 
-Program jest przygotowany pod obie wersje.
-
-Wyboru płytki dokonujemy w pliku `platformio.ini` pozostawiając odkomentowaną jedną z opcji:
+W pliku `platformio.ini` zdefiniowne są 3 gotowe konfiguracje. Każda z nich ustawia odpowiednią flagę kompilacji:
 
 ```
--DWIFI_KIT_32_BOARD
+;-DWIFI_KIT_32_BOARD
 ;-DWEMOS_BOARD
+;-DDIYMORE_BOARD
 ```
 
 Opcjonalnie można dodać buzzer (z generatorem) który informuje o:

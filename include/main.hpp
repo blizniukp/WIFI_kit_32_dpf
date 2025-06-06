@@ -7,7 +7,6 @@
 #include "oled/SSD1306Wire.h"
 #include <vector>
 #include <sstream>
-#ifdef ENABLE_WIFI
 #include <WiFi.h>
 #include <WiFiAP.h>
 #include <WiFiServer.h>
@@ -16,7 +15,7 @@
 #include "esp_bt_device.h"
 #include "esp_gap_bt_api.h"
 #include "esp_err.h"
-#endif
+
 #include "config.hpp"
 #include "measurement.hpp"
 #include "buzzer.hpp"
@@ -30,6 +29,11 @@
 #define SDA_OLED 4
 #define SCL_OLED 15
 #define RST_OLED 16
+#endif
+#ifdef DIYMORE_BOARD
+#define SDA_OLED 21
+#define SCL_OLED 22
+#define RST_OLED -1
 #endif
 
 #endif
